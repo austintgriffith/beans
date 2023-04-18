@@ -40,3 +40,4 @@ yarn deploy
 💼 Edit your deployment scripts in `packages/hardhat/deploy`
 
 📱 Open http://localhost:3000 to see the app
+

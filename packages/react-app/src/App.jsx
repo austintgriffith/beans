@@ -1,5 +1,7 @@
 import { Button, Col, Menu, Row } from "antd";
 
+import { UserSwitchOutlined, CloseOutlined } from "@ant-design/icons";
+
 import "antd/dist/antd.css";
 import {
   useBalance,
@@ -53,7 +55,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, goerli, xdai, mainnet)
+const initialNetwork = NETWORKS.buidlguidl; // <------- select your target frontend network (localhost, goerli, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -259,6 +261,8 @@ function App(props) {
     checkSafeApp();
   }, [loadWeb3Modal]);
 
+  const [showSettings, setShowSettings] = useState(false);
+
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
   return (
@@ -277,57 +281,95 @@ function App(props) {
                 />
               </div>
             )}
-            <Account
-              useBurner={USE_BURNER_WALLET}
-              address={address}
-              localProvider={localProvider}
-              userSigner={userSigner}
-              mainnetProvider={mainnetProvider}
-              price={price}
-              web3Modal={web3Modal}
-              loadWeb3Modal={loadWeb3Modal}
-              logoutOfWeb3Modal={logoutOfWeb3Modal}
-              blockExplorer={blockExplorer}
-            />
+            {showSettings && (
+              <>
+                <Account
+                  useBurner={USE_BURNER_WALLET}
+                  address={address}
+                  localProvider={localProvider}
+                  userSigner={userSigner}
+                  mainnetProvider={mainnetProvider}
+                  price={price}
+                  web3Modal={web3Modal}
+                  loadWeb3Modal={loadWeb3Modal}
+                  logoutOfWeb3Modal={logoutOfWeb3Modal}
+                  blockExplorer={blockExplorer}
+                />
+                <div
+                  onClick={() => {
+                    setShowSettings(!showSettings);
+                  }}
+                  style={{ cursor: "pointer", fontSize: 18, paddingTop: 4, paddingLeft: 8 }}
+                >
+                  <CloseOutlined />
+                </div>
+              </>
+            )}
+
+            {!showSettings && (
+              <div
+                onClick={() => {
+                  setShowSettings(!showSettings);
+                }}
+                style={{ cursor: "pointer", fontSize: 18 }}
+              >
+                {" "}
+                <UserSwitchOutlined />{" "}
+              </div>
+            )}
           </div>
         </div>
       </Header>
       {yourLocalBalance.lte(ethers.BigNumber.from("0")) && (
         <FaucetHint localProvider={localProvider} targetNetwork={targetNetwork} address={address} />
       )}
-      <NetworkDisplay
-        NETWORKCHECK={NETWORKCHECK}
-        localChainId={localChainId}
-        selectedChainId={selectedChainId}
-        targetNetwork={targetNetwork}
-        logoutOfWeb3Modal={logoutOfWeb3Modal}
-        USE_NETWORK_SELECTOR={USE_NETWORK_SELECTOR}
-      />
-      <Menu style={{ textAlign: "center", marginTop: 20 }} selectedKeys={[location.pathname]} mode="horizontal">
-        <Menu.Item key="/">
-          <Link to="/">App Home</Link>
-        </Menu.Item>
-        <Menu.Item key="/debug">
-          <Link to="/debug">Debug Contracts</Link>
-        </Menu.Item>
-        <Menu.Item key="/hints">
-          <Link to="/hints">Hints</Link>
-        </Menu.Item>
-        <Menu.Item key="/exampleui">
-          <Link to="/exampleui">ExampleUI</Link>
-        </Menu.Item>
-        <Menu.Item key="/mainnetdai">
-          <Link to="/mainnetdai">Mainnet DAI</Link>
-        </Menu.Item>
-        <Menu.Item key="/subgraph">
-          <Link to="/subgraph">Subgraph</Link>
-        </Menu.Item>
-      </Menu>
+      {showSettings && (
+        <NetworkDisplay
+          NETWORKCHECK={NETWORKCHECK}
+          localChainId={localChainId}
+          selectedChainId={selectedChainId}
+          targetNetwork={targetNetwork}
+          logoutOfWeb3Modal={logoutOfWeb3Modal}
+          USE_NETWORK_SELECTOR={USE_NETWORK_SELECTOR}
+        />
+      )}
 
       <Switch>
         <Route exact path="/">
           {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
-          <Home yourLocalBalance={yourLocalBalance} readContracts={readContracts} />
+          <Home
+            tx={tx}
+            localProvider={localProvider}
+            selectedChainId={selectedChainId}
+            yourLocalBalance={yourLocalBalance}
+            readContracts={readContracts}
+            writeContracts={writeContracts}
+            mainnetContracts={mainnetContracts}
+            mainnetProvider={mainnetProvider}
+            address={address}
+            userSigner={userSigner}
+            price={price}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
+        </Route>
+        <Route exact path="/:address">
+          {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
+          <Home
+            tx={tx}
+            localProvider={localProvider}
+            selectedChainId={selectedChainId}
+            yourLocalBalance={yourLocalBalance}
+            readContracts={readContracts}
+            writeContracts={writeContracts}
+            mainnetContracts={mainnetContracts}
+            mainnetProvider={mainnetProvider}
+            address={address}
+            userSigner={userSigner}
+            price={price}
+            blockExplorer={blockExplorer}
+            contractConfig={contractConfig}
+          />
         </Route>
         <Route exact path="/debug">
           {/*
@@ -337,7 +379,7 @@ function App(props) {
             */}
 
           <Contract
-            name="YourContract"
+            name="BuidlGuidlBeans"
             price={price}
             signer={userSigner}
             provider={localProvider}
@@ -346,88 +388,12 @@ function App(props) {
             contractConfig={contractConfig}
           />
         </Route>
-        <Route path="/hints">
-          <Hints
-            address={address}
-            yourLocalBalance={yourLocalBalance}
-            mainnetProvider={mainnetProvider}
-            price={price}
-          />
-        </Route>
-        <Route path="/exampleui">
-          <ExampleUI
-            address={address}
-            userSigner={userSigner}
-            mainnetProvider={mainnetProvider}
-            localProvider={localProvider}
-            yourLocalBalance={yourLocalBalance}
-            price={price}
-            tx={tx}
-            writeContracts={writeContracts}
-            readContracts={readContracts}
-            purpose={purpose}
-          />
-        </Route>
-        <Route path="/mainnetdai">
-          <Contract
-            name="DAI"
-            customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.DAI}
-            signer={userSigner}
-            provider={mainnetProvider}
-            address={address}
-            blockExplorer="https://etherscan.io/"
-            contractConfig={contractConfig}
-            chainId={1}
-          />
-          {/*
-            <Contract
-              name="UNI"
-              customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.UNI}
-              signer={userSigner}
-              provider={mainnetProvider}
-              address={address}
-              blockExplorer="https://etherscan.io/"
-            />
-            */}
-        </Route>
-        <Route path="/subgraph">
-          <Subgraph
-            subgraphUri={props.subgraphUri}
-            tx={tx}
-            writeContracts={writeContracts}
-            mainnetProvider={mainnetProvider}
-          />
-        </Route>
       </Switch>
 
       <ThemeSwitch />
 
       {/* 🗺 Extra UI like gas price, eth price, faucet, and support: */}
       <div style={{ position: "fixed", textAlign: "left", left: 0, bottom: 20, padding: 10 }}>
-        <Row align="middle" gutter={[4, 4]}>
-          <Col span={8}>
-            <Ramp price={price} address={address} networks={NETWORKS} />
-          </Col>
-
-          <Col span={8} style={{ textAlign: "center", opacity: 0.8 }}>
-            <GasGauge gasPrice={gasPrice} />
-          </Col>
-          <Col span={8} style={{ textAlign: "center", opacity: 1 }}>
-            <Button
-              onClick={() => {
-                window.open("https://t.me/joinchat/KByvmRe5wkR-8F_zz6AjpA");
-              }}
-              size="large"
-              shape="round"
-            >
-              <span style={{ marginRight: 8 }} role="img" aria-label="support">
-                💬
-              </span>
-              Support
-            </Button>
-          </Col>
-        </Row>
-
         <Row align="middle" gutter={[4, 4]}>
           <Col span={24}>
             {
