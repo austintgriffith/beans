@@ -1,6 +1,12 @@
 # 🫘 BuidlGuidl Beans - simple wallet for simple sends
 
 
+![image](https://user-images.githubusercontent.com/2653167/232851941-0fe94d22-1e4e-429d-b53c-871ce68995b1.png)
+
+
+---
+
+
 ```bash
 git clone https://github.com/austintgriffith/beans
 ```
