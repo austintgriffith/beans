@@ -1,38 +1,30 @@
-import { Button, Col, Menu, Row } from "antd";
+import { Col, Row } from "antd";
 
-import { UserSwitchOutlined, CloseOutlined } from "@ant-design/icons";
+import { CloseOutlined, UserSwitchOutlined } from "@ant-design/icons";
 
 import "antd/dist/antd.css";
-import {
-  useBalance,
-  useContractLoader,
-  useContractReader,
-  // useOnBlock,
-  useUserProviderAndSigner,
-} from "eth-hooks";
+import { useBalance, useContractLoader, useContractReader, useUserProviderAndSigner } from "eth-hooks";
 import { useExchangeEthPrice } from "eth-hooks/dapps/dex";
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, Route, Switch, useLocation } from "react-router-dom";
+import { Route, Switch, useLocation } from "react-router-dom";
 import "./App.css";
 import {
   Account,
   Contract,
   Faucet,
-  GasGauge,
-  Header,
-  Ramp,
-  ThemeSwitch,
-  NetworkDisplay,
   FaucetHint,
+  Header,
+  NetworkDisplay,
   NetworkSwitch,
+  ThemeSwitch,
 } from "./components";
-import { NETWORKS, ALCHEMY_KEY } from "./constants";
+import { ALCHEMY_KEY, NETWORKS } from "./constants";
 import externalContracts from "./contracts/external_contracts";
 // contracts
-import deployedContracts from "./contracts/hardhat_contracts.json";
+// import deployedContracts from "./contracts/hardhat_contracts.json";
 import { getRPCPollTime, Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
-import { useStaticJsonRPC, useGasPrice } from "./hooks";
+import { Home } from "./views";
+import { useGasPrice, useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
 /*
@@ -129,6 +121,7 @@ function App(props) {
         setAddress(newAddress);
       }
     }
+
     getAddress();
   }, [userSigner]);
 
@@ -150,7 +143,7 @@ function App(props) {
 
   // const contractConfig = useContractConfig();
 
-  const contractConfig = { deployedContracts: deployedContracts || {}, externalContracts: externalContracts || {} };
+  const contractConfig = { deployedContracts: {}, externalContracts: externalContracts || {} };
 
   // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider, contractConfig);

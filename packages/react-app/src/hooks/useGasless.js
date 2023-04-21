@@ -38,6 +38,8 @@ const ERC20_PERMIT_TOKEN_ABI = [
   "function allowance(address owner, address spender) external view returns (uint256)",
 ];
 
+const PERMIT2_ABI = ["function nonceBitmap(address owner, uint256 nonce) external view returns (uint256)"];
+
 const TOKENS = {
   eco: {
     name: "ECO",
@@ -147,6 +149,10 @@ class Relayer {
     return new ethers.Contract(token.address, ERC20_PERMIT_TOKEN_ABI, signer.provider);
   }
 
+  static #getPermit2Contract(signer) {
+    return new ethers.Contract(PERMIT2_ADDRESS, PERMIT2_ABI, signer.provider);
+  }
+
   static #getUrl(path) {
     return new URL(path, REACT_APP_RELAYER_URL).toString();
   }
@@ -190,14 +196,15 @@ export const useGasless = signer => {
     setError(null);
     setEnabling(true);
     try {
-      const { transaction } = await Relayer.initialize("eco", signer);
+      await Relayer.initialize("eco", signer);
       setEnabled(true);
-      setLastTx({ type: "enable", transaction });
     } catch (e) {
       console.error("[gasless:error:enable]", e);
       setError(e.message);
+      throw e;
+    } finally {
+      setEnabling(false);
     }
-    setEnabling(false);
   };
 
   const transfer = async (to, amount) => {
@@ -205,6 +212,9 @@ export const useGasless = signer => {
     setError(null);
     setLoading(true);
     try {
+      // If gasless feature is not enabled, enable it
+      if (!enabled) await enable();
+
       const { transaction } = await Relayer.transfer("eco", signer, to, amount);
       setLastTx({ type: "transfer", transaction });
     } catch (e) {
@@ -214,5 +224,5 @@ export const useGasless = signer => {
     setLoading(false);
   };
 
-  return { enabled, enabling, loading, error, lastTx, enable, transfer };
+  return { enabled, enabling, loading, error, lastTx, transfer };
 };
