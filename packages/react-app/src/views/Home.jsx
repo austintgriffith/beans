@@ -11,6 +11,7 @@ import QRPunkBlockie from "../components/QRPunkBlockie";
 import { useEffect } from "react";
 
 import { Address } from "../components";
+import { useGasless } from "../hooks/useGasless";
 
 /*
 /**
@@ -19,13 +20,15 @@ import { Address } from "../components";
  * @param {*} readContracts contracts from current chain already pre-loaded using ethers contract module. More here https://docs.ethers.io/v5/api/contract/contract/
  * @returns react component
  **/
-function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selectedChainId, tx, writeContracts }) {
+function Home({ userSigner, address, readContracts, mainnetProvider, selectedChainId, tx, writeContracts }) {
   let history = useHistory();
   // you can also use hooks locally in your component of choice
   // in this case, let's keep track of 'purpose' variable from our contract
   const balance = useContractReader(readContracts, "BuidlGuidlBeans", "balanceOf", [address]);
 
   const [loading, setLoading] = useState(false);
+
+  const gasless = useGasless(userSigner);
 
   const [toAddress, setToAddress] = useState();
   const [amount, setAmount] = useState();
@@ -56,24 +59,15 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
       console.log("PARSEDfloatVALUE", value);
     }
 
-    let txConfig = {
-      to: writeContracts.BuidlGuidlBeans.address,
-      chainId: selectedChainId,
-      data: writeContracts.BuidlGuidlBeans.interface.encodeFunctionData("transfer(address,uint256)", [
-        toAddress,
-        value,
-      ]),
-    };
-
-    //txConfig.gasPrice = gasPrice;
-
-    let result = tx(txConfig);
     // setToAddress("")
-    setAmount("");
-    result = await result;
-    console.log(result);
-    setLoading(false);
-    window.scrollTo(0, 0);
+    try {
+      await gasless.transfer(toAddress, value);
+      setAmount("");
+      setLoading(false);
+      window.scrollTo(0, 0);
+    } catch (e) {
+      console.log("[gasless:transfer]", e);
+    }
   };
 
   const handleKey = event => {
@@ -110,6 +104,7 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
       <div style={{ margin: "auto", marginTop: 96, width: 300 }}>
         <div style={{ padding: 16, fontSize: 18, letterSpacing: -0.1 }}>Send</div>
         <AddressInput
+          disabled={!gasless.enabled}
           hoistScanner={toggle => {
             scanner = toggle;
           }}
@@ -121,6 +116,7 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
       </div>
       <div style={{ margin: "auto", marginTop: 32, width: 300 }}>
         <InputNumber
+          disabled={!gasless.enabled}
           type="number"
           pattern="\d*"
           value={amount}
@@ -135,16 +131,38 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
         <span style={{ padding: 16, fontSize: 18, letterSpacing: -0.1 }}>beans</span>
       </div>
       <div style={{ margin: "auto", marginTop: 32, width: 500 }}>
-        <Button
-          style={{ transform: "scale(1.5)", marginTop: 8 }}
-          key="submit"
-          type="primary"
-          disabled={loading || !amount || !toAddress}
-          loading={loading}
-          onClick={doSend}
-        >
-          {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />} Send
-        </Button>
+        <div style={{ display: "flex", flexDirection: "row", gap: 8, justifyContent: "center" }}>
+          <Button
+            style={{ marginTop: 8, display: gasless.enabled ? "none" : undefined }}
+            key="submit"
+            type="primary"
+            disabled={gasless.enabling}
+            loading={gasless.enabling}
+            onClick={gasless.enable}
+          >
+            {gasless.enabling ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />} Enable Gasless
+          </Button>
+          <Button
+            style={{ marginTop: 8 }}
+            key="submit"
+            type="primary"
+            disabled={!gasless.enabled || loading || !amount || !toAddress}
+            loading={loading}
+            onClick={doSend}
+          >
+            {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />}{" "}
+            Send
+          </Button>
+        </div>
+
+        {gasless.error ? <span style={{ color: "rgb(200,0,0)" }}>{gasless.error}</span> : null}
+        {gasless.lastTx ? (
+          <span style={{ color: "rgb(0,200,0)" }}>
+            {gasless.lastTx.type === "transfer"
+              ? `Gasless transfer executed ${gasless.lastTx.transaction.hash}`
+              : `Gasless transfer enabled`}
+          </span>
+        ) : null}
 
         <div
           style={{
