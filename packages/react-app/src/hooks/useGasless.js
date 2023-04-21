@@ -94,14 +94,17 @@ class Relayer {
     return response;
   }
 
+  static async #getNonce() {
+    return ethers.BigNumber.from(ethers.utils.randomBytes(32)).toString();
+  }
+
   static async transfer(_token, signer, to, amount) {
     const token = Relayer.#getToken(_token);
-    const erc20 = Relayer.#getContract(token, signer);
 
     const from = await signer.getAddress();
     const network = await signer.provider.getNetwork();
-    const nonce = await erc20.nonces(from);
 
+    const nonce = await Relayer.#getNonce(token, signer);
     const spender = await Relayer.#getRelayerAddress();
     const deadline = getTimestamp(1800).toString();
 
