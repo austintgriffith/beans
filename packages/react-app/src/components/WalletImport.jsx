@@ -50,7 +50,10 @@ export default function WalletImport({ setShowImport }) {
   return (
     <div>
       <div style={{ marginTop: 21, width: 420 }}>
-        <i>Log in to an existing wallet you have saved access to.</i>
+        <i>
+          Log in to an existing wallet you have saved access to. When you do this, you will lose access to your current
+          account — so save that first if you've used it.
+        </i>
       </div>
 
       <br />
@@ -95,7 +98,7 @@ export default function WalletImport({ setShowImport }) {
             }
           }}
         >
-          <span style={{ marginRight: 8 }}>💾</span>Save
+          Log In
         </Button>
       </div>
 
@@ -105,7 +108,7 @@ export default function WalletImport({ setShowImport }) {
           setShowImport(false);
         }}
       >
-        <span style={{ marginRight: 8 }}>⏪</span>Cancel
+        Cancel
       </Button>
     </div>
   );
