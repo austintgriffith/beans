@@ -274,42 +274,25 @@ function App(props) {
                 />
               </div>
             )}
-            {showSettings && (
-              <>
-                <Account
-                  useBurner={USE_BURNER_WALLET}
-                  address={address}
-                  localProvider={localProvider}
-                  userSigner={userSigner}
-                  mainnetProvider={mainnetProvider}
-                  price={price}
-                  web3Modal={web3Modal}
-                  loadWeb3Modal={loadWeb3Modal}
-                  logoutOfWeb3Modal={logoutOfWeb3Modal}
-                  blockExplorer={blockExplorer}
-                />
-                <div
-                  onClick={() => {
-                    setShowSettings(!showSettings);
-                  }}
-                  style={{ cursor: "pointer", fontSize: 18, paddingTop: 4, paddingLeft: 8 }}
-                >
-                  <CloseOutlined />
-                </div>
-              </>
-            )}
 
-            {!showSettings && (
-              <div
-                onClick={() => {
-                  setShowSettings(!showSettings);
-                }}
-                style={{ cursor: "pointer", fontSize: 18 }}
-              >
-                {" "}
-                <UserSwitchOutlined />{" "}
-              </div>
-            )}
+            <Account
+              useBurner={USE_BURNER_WALLET}
+              address={address}
+              localProvider={localProvider}
+              userSigner={userSigner}
+              mainnetProvider={mainnetProvider}
+              price={price}
+              web3Modal={web3Modal}
+              loadWeb3Modal={loadWeb3Modal}
+              logoutOfWeb3Modal={logoutOfWeb3Modal}
+              blockExplorer={blockExplorer}
+            />
+            <div
+              onClick={() => {
+                setShowSettings(!showSettings);
+              }}
+              style={{ cursor: "pointer", fontSize: 18, paddingTop: 4, paddingLeft: 8 }}
+            ></div>
           </div>
         </div>
       </Header>
@@ -383,8 +366,6 @@ function App(props) {
         </Route>
       </Switch>
 
-      <ThemeSwitch />
-
       {/* 🗺 Extra UI like gas price, eth price, faucet, and support: */}
       <div style={{ position: "fixed", textAlign: "left", left: 0, bottom: 20, padding: 10 }}>
         <Row align="middle" gutter={[4, 4]}>
@@ -400,6 +381,13 @@ function App(props) {
           </Col>
         </Row>
       </div>
+      <div style={{ zIndex: -1, padding: 64, opacity: 0.5, fontSize: 12 }}>
+        created by <a href="https://eco.org">eco</a> with{" "}
+        <a href="https://github.com/austintgriffith/scaffold-eth#-scaffold-eth" target="_blank" rel="noreferrer">
+          scaffold-eth
+        </a>
+      </div>
+      <div style={{ padding: 32 }} />
     </div>
   );
 }

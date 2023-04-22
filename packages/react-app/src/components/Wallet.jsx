@@ -1,4 +1,4 @@
-import { KeyOutlined, QrcodeOutlined, SendOutlined, WalletOutlined } from "@ant-design/icons";
+import { KeyOutlined, QrcodeOutlined, SendOutlined, WalletOutlined, SettingOutlined } from "@ant-design/icons";
 import { Button, message, Modal, Spin, Tooltip, Typography } from "antd";
 import { ethers } from "ethers";
 import QR from "qrcode.react";
@@ -65,11 +65,10 @@ export default function Wallet(props) {
 
   const providerSend = props.provider ? (
     <Tooltip title="Wallet">
-      <WalletOutlined
+      <SettingOutlined
         onClick={() => {
           setOpen(!open);
         }}
-        rotate={-90}
         style={{
           padding: props.padding ? props.padding : 7,
           color: props.color ? props.color : "",
@@ -178,48 +177,22 @@ export default function Wallet(props) {
       display = (
         <div>
           <div>
-            <b>Wallet Link:</b>
+            <b>This text contains all of your funds. Keep it safe.</b>
             <div>
               <Text style={{ fontSize: 11 }} copyable>
                 {pk}
               </Text>
             </div>
-
-            <div style={{ marginTop: 16 }}>
-              <div>
-                <b>Punk Wallet:</b>
-              </div>
-              <Text style={{ fontSize: 11 }} copyable>
-                {fullLink}
-              </Text>
-            </div>
-
             <br />
             <i>
-              Point your camera phone at qr code to open in &nbsp;
-              <a target="_blank" href={fullLink} rel="noopener noreferrer">
-                Beans Wallet
-              </a>
-              :
+              Save this text somewhere safe and you can "Import" it back into this website on a different device, or if
+              this device resets.
             </i>
 
-            <div
-              style={{ cursor: "pointer" }}
-              onClick={() => {
-                const el = document.createElement("textarea");
-                el.value = fullLink;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand("copy");
-                document.body.removeChild(el);
-                message.success(<span style={{ position: "relative" }}>Copied Private Key Link</span>);
-              }}
-            >
-              <QR value={fullLink} size="450" level="H" includeMargin renderAs="svg" />
-            </div>
+            <br />
           </div>
 
-          {extraPkDisplay ? (
+          {/*extraPkDisplay ? (
             <div>
               <h3>Known Private Keys:</h3>
               {extraPkDisplay}
@@ -240,7 +213,7 @@ export default function Wallet(props) {
             </div>
           ) : (
             ""
-          )}
+          )*/}
         </div>
       );
     }
@@ -271,29 +244,6 @@ export default function Wallet(props) {
     const inputStyle = {
       padding: 10,
     };
-
-    display = (
-      <div>
-        <div style={inputStyle}>
-          <AddressInput
-            autoFocus
-            ensProvider={props.ensProvider}
-            placeholder="to address"
-            address={toAddress}
-            onChange={setToAddress}
-          />
-        </div>
-        <div style={inputStyle}>
-          <EtherInput
-            price={props.price}
-            value={amount}
-            onChange={value => {
-              setAmount(value);
-            }}
-          />
-        </div>
-      </div>
-    );
     receiveButton = (
       <Button
         key="receive"
@@ -326,56 +276,17 @@ export default function Wallet(props) {
         title={
           <div>
             {selectedAddress ? <Address address={selectedAddress} ensProvider={props.ensProvider} /> : <Spin />}
-            <div style={{ float: "right", paddingRight: 25 }}>
-              <Balance address={selectedAddress} provider={props.provider} dollarMultiplier={props.price} />
-            </div>
           </div>
         }
         onOk={() => {
-          setQr();
           setPK();
           setOpen(!open);
         }}
         onCancel={() => {
-          setQr();
           setPK();
           setOpen(!open);
         }}
-        footer={
-          showImport
-            ? null
-            : [
-                showImportButton,
-                privateKeyButton,
-                receiveButton,
-                <Button
-                  key="submit"
-                  type="primary"
-                  disabled={!amount || !toAddress || qr}
-                  loading={false}
-                  onClick={() => {
-                    const tx = Transactor(props.signer || props.provider);
-
-                    let value;
-                    try {
-                      value = ethers.utils.parseEther("" + amount);
-                    } catch (e) {
-                      // failed to parseEther, try something else
-                      value = ethers.utils.parseEther("" + parseFloat(amount).toFixed(8));
-                    }
-
-                    tx({
-                      to: toAddress,
-                      value,
-                    });
-                    setOpen(!open);
-                    setQr();
-                  }}
-                >
-                  <SendOutlined /> Send
-                </Button>,
-              ]
-        }
+        footer={showImport ? null : [showImportButton, privateKeyButton]}
       >
         {showImport ? <WalletImport setShowImport={setShowImport} /> : display}
       </Modal>

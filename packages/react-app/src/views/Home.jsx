@@ -111,7 +111,7 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
           letterSpacing: -0.5,
         }}
       >
-        <span style={{ fontSize: 32, letterSpacing: 0 }}>ⓔ</span>
+        <span style={{ fontSize: 60, letterSpacing: 0 }}>ⓔ</span>
         {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 4).toFixed(4) : "---"}
       </div>
 
@@ -160,15 +160,16 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
           disabled={disabled}
           loading={loading}
           onClick={doSend}
-          style={{ marginTop: 8, ...(disabled ? {} : { color: "white", backgroundColor: "#021441" }) }}
+          style={{ marginTop: 8, ...(disabled ? {} : { color: "white", backgroundColor: "#06153c" }) }}
         >
-          {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />} Send
+          {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />}
+          <span style={{ "font-family": "romana", "padding-left": 20, "padding-right": 20 }}>Send</span>
         </Button>
 
         {gasless.enabling ? (
-          <span style={{ color: "#021441" }}>Enabling gasless transactions...</span>
+          <span style={{ color: "#06153c" }}>Enabling gasless transactions...</span>
         ) : gasless.loading ? (
-          <span style={{ color: "#021441" }}>Transfering tokens...</span>
+          <span style={{ color: "#06153c" }}>Transferring tokens...</span>
         ) : null}
         {gasless.error ? <span style={{ color: "rgb(200,0,0)" }}>{gasless.error}</span> : null}
         {gasless.lastTx ? (

@@ -65,10 +65,6 @@ export default function Account({
 
   const display = !minimized && (
     <span>
-      {address && (
-        <Address address={address} ensProvider={mainnetProvider} blockExplorer={blockExplorer} fontSize={20} />
-      )}
-      <Balance address={address} provider={localProvider} price={price} size={20} />
       {!isContract && (
         <Wallet
           address={address}
@@ -76,22 +72,13 @@ export default function Account({
           signer={userSigner}
           ensProvider={mainnetProvider}
           price={price}
-          color={currentTheme === "light" ? "#1890ff" : "#2caad9"}
-          size={22}
+          color={currentTheme === "light" ? "#06153c" : "#2caad9"}
+          size={36}
           padding={"0px"}
         />
       )}
     </span>
   );
 
-  return (
-    <div style={{ display: "flex" }}>
-      {display}
-      {web3Modal && (
-        <Button style={{ marginLeft: 8 }} shape="round" onClick={accountButtonInfo.action}>
-          {accountButtonInfo.name}
-        </Button>
-      )}
-    </div>
-  );
+  return <div style={{ display: "flex" }}>{display}</div>;
 }
