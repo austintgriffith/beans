@@ -1,16 +1,23 @@
-import { CaretUpOutlined, RightCircleFilled, ScanOutlined, SendOutlined } from "@ant-design/icons";
+import { CaretUpOutlined, ScanOutlined, SendOutlined } from "@ant-design/icons";
 import { useContractReader } from "eth-hooks";
 import { ethers } from "ethers";
-import React, { useState } from "react";
-import { Link, useHistory } from "react-router-dom";
-import { InputNumber, Button } from "antd";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useHistory, useParams } from "react-router-dom";
+import { Button, Input } from "antd";
 
 import AddressInput from "../components/AddressInput";
 import QRPunkBlockie from "../components/QRPunkBlockie";
-import { useEffect } from "react";
+import { useGasless } from "../hooks/useGasless";
 
-import { Address } from "../components";
+const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+const REACT_APP_ECO_TOKEN_ADDRESS = process.env.REACT_APP_ECO_TOKEN_ADDRESS;
+
+function round(number, decimals) {
+  const d = Math.pow(10, decimals);
+  return Math.round((number + Number.EPSILON) * d) / d;
+}
+
+const explorer = process.env.REACT_APP_NETWORK === "goerli" ? "https://goerli.etherscan.io" : "https://etherscan.io";
 
 /*
 /**
@@ -19,13 +26,23 @@ import { Address } from "../components";
  * @param {*} readContracts contracts from current chain already pre-loaded using ethers contract module. More here https://docs.ethers.io/v5/api/contract/contract/
  * @returns react component
  **/
-function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selectedChainId, tx, writeContracts }) {
+function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, writeContracts }) {
   let history = useHistory();
+
+  const readContracts = useMemo(
+    () => ({
+      ECO: new ethers.Contract(REACT_APP_ECO_TOKEN_ADDRESS, ERC20_ABI, userSigner),
+    }),
+    [userSigner],
+  );
+
   // you can also use hooks locally in your component of choice
   // in this case, let's keep track of 'purpose' variable from our contract
-  const balance = useContractReader(readContracts, "BuidlGuidlBeans", "balanceOf", [address]);
+  const balance = useContractReader(readContracts, "ECO", "balanceOf", [address], 4000);
 
   const [loading, setLoading] = useState(false);
+
+  const gasless = useGasless(userSigner);
 
   const [toAddress, setToAddress] = useState();
   const [amount, setAmount] = useState();
@@ -56,24 +73,15 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
       console.log("PARSEDfloatVALUE", value);
     }
 
-    let txConfig = {
-      to: writeContracts.BuidlGuidlBeans.address,
-      chainId: selectedChainId,
-      data: writeContracts.BuidlGuidlBeans.interface.encodeFunctionData("transfer(address,uint256)", [
-        toAddress,
-        value,
-      ]),
-    };
-
-    //txConfig.gasPrice = gasPrice;
-
-    let result = tx(txConfig);
     // setToAddress("")
-    setAmount("");
-    result = await result;
-    console.log(result);
-    setLoading(false);
-    window.scrollTo(0, 0);
+    try {
+      await gasless.transfer(toAddress, value);
+      setAmount("");
+      setLoading(false);
+      window.scrollTo(0, 0);
+    } catch (e) {
+      console.log("[gasless:transfer]", e);
+    }
   };
 
   const handleKey = event => {
@@ -83,76 +91,103 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
     }
   };
 
+  const disabled = loading || !amount || !toAddress;
+
   return (
     <div>
       <div
         style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
           margin: "auto",
           textAlign: "right",
-          paddingRight: 64,
+          gap: 8,
           marginTop: 16,
           width: 500,
-          fontSize: 96,
+          fontFamily: "'Rubik', sans-serif",
+          fontSize: 72,
           letterSpacing: -0.5,
-          opacity: balance ? 1 : 0.02,
         }}
       >
-        {balance ? Math.floor(ethers.utils.formatEther(balance)) : "---"}
-        <span style={{ fontSize: 32, letterSpacing: 0, opacity: 0.33 }}>beans</span>
-        <div style={{ fontSize: 48, position: "absolute", marginLeft: 370, marginTop: -128 }}>🫘</div>
+        <span style={{ fontSize: 60, letterSpacing: 0 }}>ⓔ</span>
+        {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 4).toFixed(4) : "---"}
       </div>
 
       <div style={{ margin: "auto", position: "relative", backgroundColor: "#ffffff", padding: 8, width: 400 }}>
         <QRPunkBlockie withQr={true} address={address} />
-        <Address address={address} ensProvider={mainnetProvider} hideBlockie={true} fontSize={18} />
+        {/*<Address address={address} ensProvider={mainnetProvider} hideBlockie={true} fontSize={18} />*/}
       </div>
 
-      <div style={{ margin: "auto", marginTop: 96, width: 300 }}>
-        <div style={{ padding: 16, fontSize: 18, letterSpacing: -0.1 }}>Send</div>
+      <div style={{ margin: "auto", marginTop: 32, width: 300 }}>
         <AddressInput
-          hoistScanner={toggle => {
-            scanner = toggle;
-          }}
-          ensProvider={mainnetProvider}
-          placeholder="enter address, ens, or scan QR"
+          placeholder="to address"
           value={toAddress}
           onChange={setToAddress}
+          ensProvider={mainnetProvider}
+          hoistScanner={toggle => (scanner = toggle)}
         />
       </div>
       <div style={{ margin: "auto", marginTop: 32, width: 300 }}>
-        <InputNumber
+        <Input
+          size="large"
           type="number"
+          min="0"
           pattern="\d*"
+          prefix="ⓔ"
+          placeholder="amount to send"
           value={amount}
-          onChange={setAmount}
+          style={{ fontSize: 20, width: 300, fontFamily: "'Rubik', sans-serif" }}
+          onChange={e => setAmount(e.target.value)}
           onKeyPress={handleKey}
-          /* 
-          onChange={(value)=>{
-            setAmount(Math.floor(value))
-          }}
-          */
         />
-        <span style={{ padding: 16, fontSize: 18, letterSpacing: -0.1 }}>beans</span>
       </div>
-      <div style={{ margin: "auto", marginTop: 32, width: 500 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 8,
+          margin: "auto",
+          marginTop: 32,
+          width: 500,
+        }}
+      >
         <Button
-          style={{ transform: "scale(1.5)", marginTop: 8 }}
           key="submit"
-          type="primary"
-          disabled={loading || !amount || !toAddress}
+          size="large"
+          disabled={disabled}
           loading={loading}
           onClick={doSend}
+          style={{ marginTop: 8, ...(disabled ? {} : { color: "white", backgroundColor: "#06153c" }) }}
         >
-          {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />} Send
+          {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />}
+          <span style={{ "font-family": "romana", "padding-left": 20, "padding-right": 20 }}>Send</span>
         </Button>
+
+        {gasless.enabling ? (
+          <span style={{ color: "#06153c" }}>Enabling gasless transactions...</span>
+        ) : gasless.loading ? (
+          <span style={{ color: "#06153c" }}>Transferring tokens...</span>
+        ) : null}
+        {gasless.error ? <span style={{ color: "rgb(200,0,0)" }}>{gasless.error}</span> : null}
+        {gasless.lastTx ? (
+          <span style={{ color: "rgb(0,200,0)" }}>
+            Gasless transfer executed -{" "}
+            <a target="_blank" rel="noreferrer" href={`${explorer}/tx/${gasless.lastTx.transaction.hash}`}>
+              transaction
+            </a>
+          </span>
+        ) : null}
 
         <div
           style={{
-            transform: "scale(4)",
+            transform: "scale(2.5)",
             transformOrigin: "70% 80%",
             position: "fixed",
             textAlign: "right",
-            right: 0,
+            right: 16,
             bottom: 16,
             padding: 10,
             zIndex: 257,
@@ -161,17 +196,14 @@ function Home({ yourLocalBalance, address, readContracts, mainnetProvider, selec
           <Button
             type="primary"
             shape="circle"
-            style={{ zIndex: 257, backgroundColor: "#7f403c", borderColor: "#4b2422" }}
             size="large"
-            onClick={() => {
-              scanner(true);
-            }}
+            onClick={() => scanner(true)}
+            style={{ zIndex: 257, border: 0, backgroundColor: "#021540" }}
           >
             <ScanOutlined style={{ color: "#FFFFFF" }} />
           </Button>
         </div>
       </div>
-      <div style={{ padding: 128 }}></div>
     </div>
   );
 }

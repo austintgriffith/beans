@@ -1,38 +1,30 @@
-import { Button, Col, Menu, Row } from "antd";
+import { Col, Row } from "antd";
 
-import { UserSwitchOutlined, CloseOutlined } from "@ant-design/icons";
+import { CloseOutlined, UserSwitchOutlined } from "@ant-design/icons";
 
 import "antd/dist/antd.css";
-import {
-  useBalance,
-  useContractLoader,
-  useContractReader,
-  // useOnBlock,
-  useUserProviderAndSigner,
-} from "eth-hooks";
+import { useBalance, useContractLoader, useContractReader, useUserProviderAndSigner } from "eth-hooks";
 import { useExchangeEthPrice } from "eth-hooks/dapps/dex";
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, Route, Switch, useLocation } from "react-router-dom";
+import { Route, Switch, useLocation } from "react-router-dom";
 import "./App.css";
 import {
   Account,
   Contract,
   Faucet,
-  GasGauge,
-  Header,
-  Ramp,
-  ThemeSwitch,
-  NetworkDisplay,
   FaucetHint,
+  Header,
+  NetworkDisplay,
   NetworkSwitch,
+  ThemeSwitch,
 } from "./components";
-import { NETWORKS, ALCHEMY_KEY } from "./constants";
+import { ALCHEMY_KEY, NETWORKS } from "./constants";
 import externalContracts from "./contracts/external_contracts";
 // contracts
-import deployedContracts from "./contracts/hardhat_contracts.json";
+// import deployedContracts from "./contracts/hardhat_contracts.json";
 import { getRPCPollTime, Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
-import { useStaticJsonRPC, useGasPrice } from "./hooks";
+import { Home } from "./views";
+import { useGasPrice, useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
 /*
@@ -55,7 +47,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const initialNetwork = NETWORKS.buidlguidl; // <------- select your target frontend network (localhost, goerli, xdai, mainnet)
+const initialNetwork = NETWORKS[process.env.REACT_APP_NETWORK ?? "buidlguidl"]; // <------- select your target frontend network (localhost, goerli, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -129,6 +121,7 @@ function App(props) {
         setAddress(newAddress);
       }
     }
+
     getAddress();
   }, [userSigner]);
 
@@ -150,7 +143,7 @@ function App(props) {
 
   // const contractConfig = useContractConfig();
 
-  const contractConfig = { deployedContracts: deployedContracts || {}, externalContracts: externalContracts || {} };
+  const contractConfig = { deployedContracts: {}, externalContracts: externalContracts || {} };
 
   // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider, contractConfig);
@@ -281,57 +274,30 @@ function App(props) {
                 />
               </div>
             )}
-            {showSettings && (
-              <>
-                <Account
-                  useBurner={USE_BURNER_WALLET}
-                  address={address}
-                  localProvider={localProvider}
-                  userSigner={userSigner}
-                  mainnetProvider={mainnetProvider}
-                  price={price}
-                  web3Modal={web3Modal}
-                  loadWeb3Modal={loadWeb3Modal}
-                  logoutOfWeb3Modal={logoutOfWeb3Modal}
-                  blockExplorer={blockExplorer}
-                />
-                <div
-                  onClick={() => {
-                    setShowSettings(!showSettings);
-                  }}
-                  style={{ cursor: "pointer", fontSize: 18, paddingTop: 4, paddingLeft: 8 }}
-                >
-                  <CloseOutlined />
-                </div>
-              </>
-            )}
 
-            {!showSettings && (
-              <div
-                onClick={() => {
-                  setShowSettings(!showSettings);
-                }}
-                style={{ cursor: "pointer", fontSize: 18 }}
-              >
-                {" "}
-                <UserSwitchOutlined />{" "}
-              </div>
-            )}
+            <Account
+              useBurner={USE_BURNER_WALLET}
+              address={address}
+              localProvider={localProvider}
+              userSigner={userSigner}
+              mainnetProvider={mainnetProvider}
+              price={price}
+              web3Modal={web3Modal}
+              loadWeb3Modal={loadWeb3Modal}
+              logoutOfWeb3Modal={logoutOfWeb3Modal}
+              blockExplorer={blockExplorer}
+            />
+            <div
+              onClick={() => {
+                setShowSettings(!showSettings);
+              }}
+              style={{ cursor: "pointer", fontSize: 18, paddingTop: 4, paddingLeft: 8 }}
+            ></div>
           </div>
         </div>
       </Header>
       {yourLocalBalance.lte(ethers.BigNumber.from("0")) && (
         <FaucetHint localProvider={localProvider} targetNetwork={targetNetwork} address={address} />
-      )}
-      {showSettings && (
-        <NetworkDisplay
-          NETWORKCHECK={NETWORKCHECK}
-          localChainId={localChainId}
-          selectedChainId={selectedChainId}
-          targetNetwork={targetNetwork}
-          logoutOfWeb3Modal={logoutOfWeb3Modal}
-          USE_NETWORK_SELECTOR={USE_NETWORK_SELECTOR}
-        />
       )}
 
       <Switch>
@@ -390,8 +356,6 @@ function App(props) {
         </Route>
       </Switch>
 
-      <ThemeSwitch />
-
       {/* 🗺 Extra UI like gas price, eth price, faucet, and support: */}
       <div style={{ position: "fixed", textAlign: "left", left: 0, bottom: 20, padding: 10 }}>
         <Row align="middle" gutter={[4, 4]}>
@@ -407,6 +371,13 @@ function App(props) {
           </Col>
         </Row>
       </div>
+      <div style={{ zIndex: -1, padding: 64, opacity: 0.5, fontSize: 12 }}>
+        created by <a href="https://eco.org">eco</a> with{" "}
+        <a href="https://github.com/austintgriffith/scaffold-eth#-scaffold-eth" target="_blank" rel="noreferrer">
+          scaffold-eth
+        </a>
+      </div>
+      <div style={{ padding: 32 }} />
     </div>
   );
 }

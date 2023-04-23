@@ -24,7 +24,7 @@ export default function Header({ link, title, subTitle, ...props }) {
 }
 
 Header.defaultProps = {
-  link: "https://be4ns.com",
-  title: "✨🫘✨",
+  link: "",
+  title: "",
   subTitle: "",
 };

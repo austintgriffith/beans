@@ -11,7 +11,7 @@ const isENS = (address = "") => address.endsWith(".eth") || address.endsWith(".x
 
 // probably we need to change value={toAddress} to address={toAddress}
 
-/** 
+/**
   ~ What it does? ~
 
   Displays an address input with QR scan option
@@ -72,18 +72,17 @@ export default function AddressInput(props) {
     });
 
   return (
-    <div>
+    <>
       {scan ? (
         <div
+          onClick={() => setScan(false)}
           style={{
             zIndex: 256,
             position: "absolute",
-            right: "10%",
-            bottom: "10%",
+            top: "50%",
+            left: "50%",
             width: "50%",
-          }}
-          onClick={() => {
-            setScan(false);
+            transform: "translate(-50%, -50%)",
           }}
         >
           <QrReader
@@ -118,30 +117,26 @@ export default function AddressInput(props) {
         ""
       )}
       <Input
+        size="large"
         id="0xAddress" // name it something other than address for auto fill doxxing
         name="0xAddress" // name it something other than address for auto fill doxxing
         autoComplete="off"
+        disabled={props.disabled}
         autoFocus={props.autoFocus}
         placeholder={props.placeholder ? props.placeholder : "address"}
-        prefix={<Blockie address={currentValue} size={8} scale={3} />}
+        style={{ fontSize: 20, fontFamily: "'Rubik', sans-serif" }}
+        // prefix={<Blockie address={currentValue} size={8} scale={3} />}
         value={ethers.utils.isAddress(currentValue) && !isENS(currentValue) && isENS(ens) ? ens : currentValue}
+        onChange={e => updateAddress(e.target.value)}
         addonAfter={
           <div
-            style={{ marginTop: 4, cursor: "pointer" }}
-            onClick={() => {
-              setScan(!scan);
-            }}
+            style={{ marginTop: 4, cursor: props.disabled ? "not-allowed" : "pointer" }}
+            onClick={() => !props.disabled && setScan(!scan)}
           >
-            <Badge count={<CameraOutlined style={{ fontSize: 9 }} />}>
-              <QrcodeOutlined style={{ fontSize: 18 }} />
-            </Badge>{" "}
-            Scan
+            <QrcodeOutlined height={32} width={32} style={{ fontSize: 18 }} />
           </div>
         }
-        onChange={e => {
-          updateAddress(e.target.value);
-        }}
       />
-    </div>
+    </>
   );
 }

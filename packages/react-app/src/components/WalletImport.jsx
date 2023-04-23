@@ -50,48 +50,23 @@ export default function WalletImport({ setShowImport }) {
   return (
     <div>
       <div style={{ marginTop: 21, width: 420 }}>
-        <h2>IMPORT</h2>
+        <i>
+          Log in to an existing wallet you have saved access to. When you do this, you will lose access to your current
+          account — so save that first if you've used it.
+        </i>
       </div>
 
-      <div style={{ opacity: 0.5 }}>mnemonic</div>
-      <Input.Password
-        style={{ width: 380 }}
-        size="large"
-        placeholder="word1 word2 word3"
-        onChange={async e => {
-          setImportMnemonic(e.target.value);
-        }}
-      />
+      <br />
 
-      <Input
-        style={{ width: 69 }}
-        value={importMnemonicIndex}
-        onChange={e => {
-          setImportMnemonicIndex(e.target.value);
-        }}
-        size="large"
-      />
+      <Input size="large" placeholder="Use your saved passwords" name="username" autocomplete="username" />
 
-      <Input.Password
-        style={{ width: 380 }}
-        size="large"
-        placeholder="optional password"
-        onChange={async e => {
-          setPassword(e.target.value);
-        }}
-      />
-
-      <div style={{ marginTop: 21, width: 420 }}>
-        <h4>OR</h4>
-      </div>
-
-      <div style={{ opacity: 0.5 }}>private key</div>
       <Input.Password
         disabled={importMnemonic}
-        style={{ width: 420 }}
+        style={{ display: "none" }}
         size="large"
         value={importPrivatekey}
         placeholder="0x..."
+        autocomplete="current-password"
         onChange={e => {
           setImportPrivatekey(e.target.value);
         }}
@@ -99,16 +74,7 @@ export default function WalletImport({ setShowImport }) {
 
       <hr />
 
-      {importAddress ? (
-        <div style={{ width: 420, height: 200 }}>
-          <div style={{ float: "right", marginTop: 64 }}>
-            <Address value={importAddress} />
-          </div>
-          <hr />
-        </div>
-      ) : (
-        ""
-      )}
+      {importAddress ? <div></div> : ""}
 
       <div style={{ float: "right" }}>
         <Button
@@ -132,7 +98,7 @@ export default function WalletImport({ setShowImport }) {
             }
           }}
         >
-          <span style={{ marginRight: 8 }}>💾</span>Save
+          Log In
         </Button>
       </div>
 
@@ -142,7 +108,7 @@ export default function WalletImport({ setShowImport }) {
           setShowImport(false);
         }}
       >
-        <span style={{ marginRight: 8 }}>⏪</span>Cancel
+        Cancel
       </Button>
     </div>
   );
