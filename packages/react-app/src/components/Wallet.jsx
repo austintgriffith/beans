@@ -89,7 +89,7 @@ export default function Wallet(props) {
         setShowImport(true);
       }}
     >
-      <span style={{ marginRight: 8 }}>💾</span>Import
+      <span style={{ marginRight: 8 }}>💾</span>Log In
     </Button>
   );
 
@@ -177,17 +177,23 @@ export default function Wallet(props) {
       display = (
         <div>
           <div>
-            <b>This text contains all of your funds. Keep it safe.</b>
             <div>
-              <Text style={{ fontSize: 11 }} copyable>
-                {pk}
-              </Text>
+              <i>
+                Pressing "Save Access" will prompt your browser to save access to your account. You can then access your
+                account using the saved credentials on this device or others.
+              </i>
             </div>
             <br />
-            <i>
-              Save this text somewhere safe and you can "Import" it back into this website on a different device, or if
-              this device resets.
-            </i>
+
+            <form id="pk">
+              <span style={{ display: "none" }}>
+                <input type="text" name="username" value={"Eco Wallet - " + selectedAddress} />
+                <input type="password" name="password" value={pk} />
+              </span>
+              <button id="submitPk" type="submit" value="Save Access" action="#">
+                Save Access
+              </button>
+            </form>
 
             <br />
           </div>
@@ -263,7 +269,7 @@ export default function Wallet(props) {
           setQr("");
         }}
       >
-        <KeyOutlined /> Private Key
+        <KeyOutlined /> Save Access
       </Button>
     );
   }
