@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { useUserProviderAndSigner } from "eth-hooks";
 
@@ -86,6 +86,7 @@ function App() {
           <Home address={address} userSigner={userSigner} localProvider={localProvider} network={targetNetwork} />
         }
       />
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 
