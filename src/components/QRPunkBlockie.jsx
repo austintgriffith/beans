@@ -1,18 +1,23 @@
-import React from "react";
+import React, { useMemo } from "react";
 import QR from "qrcode.react";
 import { message } from "antd";
 
 export default function QRPunkBlockie(props) {
   const hardcodedSizeForNow = 380;
-  const qrValue = props.address ? new URL(props.address, window.location.href).toString() : "";
+
+  const qrValue = useMemo(() => {
+    const url = new URL("", window.location.origin);
+    url.searchParams.set("addr", props.address);
+    return props.address ? url.toString() : "";
+  }, [props.address]);
 
   return (
     <div
       style={{
-        transform: "scale(" + (props.scale ? props.scale : "1") + ")",
-        transformOrigin: "50% 50%",
         margin: "auto",
         position: "relative",
+        transformOrigin: "50% 50%",
+        transform: "scale(" + (props.scale ? props.scale : "1") + ")",
         width: hardcodedSizeForNow,
       }}
       onClick={() => {
@@ -37,7 +42,7 @@ export default function QRPunkBlockie(props) {
           top: hardcodedSizeForNow / 2 - 46,
         }}
       >
-        <img src="./$ECO_square.png" style={{ width: 92, height: 92 }} />
+        <img alt="logo" src="./$ECO_square.png" style={{ width: 92, height: 92 }} />
       </div>
 
       {props.withQr ? (
@@ -53,7 +58,14 @@ export default function QRPunkBlockie(props) {
       )}
 
       {props.showAddress ? (
-        <div style={{ fontWeight: "bolder", letterSpacing: -0.8, color: "#666666", fontSize: 14.8 }}>
+        <div
+          style={{
+            fontWeight: "bolder",
+            letterSpacing: -0.8,
+            color: "#666666",
+            fontSize: 14.8,
+          }}
+        >
           {props.address}
         </div>
       ) : (

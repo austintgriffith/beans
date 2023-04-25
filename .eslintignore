@@ -1,0 +1,12 @@
+# folders
+build/
+node_modules/
+# files
+**/*.less
+**/*.css
+**/*.scss
+**/*.json
+**/*.png
+**/*.svg
+
+yarn.lock

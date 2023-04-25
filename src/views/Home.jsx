@@ -1,13 +1,14 @@
-import { CaretUpOutlined, ScanOutlined, SendOutlined } from "@ant-design/icons";
-import { useContractReader } from "eth-hooks";
-import { ethers } from "ethers";
 import React, { useEffect, useMemo, useState } from "react";
-import { useHistory, useParams } from "react-router-dom";
 import { Button, Input } from "antd";
+import { CaretUpOutlined, ScanOutlined, SendOutlined } from "@ant-design/icons";
+import { ethers } from "ethers";
+import { useContractReader } from "eth-hooks";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import AddressInput from "../components/AddressInput";
 import QRPunkBlockie from "../components/QRPunkBlockie";
-import { useGasless } from "../hooks/useGasless";
+import { useGasless } from "../hooks";
+import { formatAmount } from "../helpers/formatAmount";
 
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
 const REACT_APP_ECO_TOKEN_ADDRESS = process.env.REACT_APP_ECO_TOKEN_ADDRESS;
@@ -17,17 +18,8 @@ function round(number, decimals) {
   return Math.round((number + Number.EPSILON) * d) / d;
 }
 
-const explorer = process.env.REACT_APP_NETWORK === "goerli" ? "https://goerli.etherscan.io" : "https://etherscan.io";
-
-/*
-/**
- * web3 props can be passed from '../App.jsx' into your local view component for use
- * @param {*} yourLocalBalance balance on current network
- * @param {*} readContracts contracts from current chain already pre-loaded using ethers contract module. More here https://docs.ethers.io/v5/api/contract/contract/
- * @returns react component
- **/
-function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, writeContracts }) {
-  let history = useHistory();
+function Home({ network, userSigner, address, localProvider }) {
+  const navigate = useNavigate();
 
   const readContracts = useMemo(
     () => ({
@@ -49,38 +41,25 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
 
   let scanner;
 
-  let params = useParams();
+  const [searchParams] = useSearchParams();
   useEffect(() => {
-    if (params.address) {
-      setToAddress(params.address);
-      history.push("/");
+    const _address = searchParams.get("addr");
+    if (_address) {
+      setToAddress(_address);
+      navigate("/");
     }
-  }, [params.address]);
+  }, [navigate, searchParams]);
 
   const doSend = async () => {
     setLoading(true);
-
-    let value;
-    try {
-      console.log("PARSE ETHER", amount);
-      value = ethers.utils.parseEther("" + amount);
-      console.log("PARSEDVALUE", value);
-    } catch (e) {
-      const floatVal = parseFloat(amount).toFixed(8);
-      console.log("floatVal", floatVal);
-      // failed to parseEther, try something else
-      value = ethers.utils.parseEther("" + floatVal);
-      console.log("PARSEDfloatVALUE", value);
-    }
-
-    // setToAddress("")
+    const value = formatAmount(amount);
     try {
       await gasless.transfer(toAddress, value);
       setAmount("");
-      setLoading(false);
-      window.scrollTo(0, 0);
     } catch (e) {
       console.log("[gasless:transfer]", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,9 +94,16 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
         {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 4).toFixed(4) : "---"}
       </div>
 
-      <div style={{ margin: "auto", position: "relative", backgroundColor: "#ffffff", padding: 8, width: 400 }}>
-        <QRPunkBlockie withQr={true} address={address} />
-        {/*<Address address={address} ensProvider={mainnetProvider} hideBlockie={true} fontSize={18} />*/}
+      <div
+        style={{
+          margin: "auto",
+          position: "relative",
+          backgroundColor: "#ffffff",
+          padding: 8,
+          width: 400,
+        }}
+      >
+        <QRPunkBlockie withQr address={address} />
       </div>
 
       <div style={{ margin: "auto", marginTop: 32, width: 300 }}>
@@ -125,7 +111,7 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
           placeholder="to address"
           value={toAddress}
           onChange={setToAddress}
-          ensProvider={mainnetProvider}
+          ensProvider={localProvider}
           hoistScanner={toggle => (scanner = toggle)}
         />
       </div>
@@ -138,7 +124,11 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
           prefix="ⓔ"
           placeholder="amount to send"
           value={amount}
-          style={{ fontSize: 20, width: 300, fontFamily: "'Rubik', sans-serif" }}
+          style={{
+            fontSize: 20,
+            width: 300,
+            fontFamily: "'Rubik', sans-serif",
+          }}
           onChange={e => setAmount(e.target.value)}
           onKeyPress={handleKey}
         />
@@ -160,10 +150,21 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
           disabled={disabled}
           loading={loading}
           onClick={doSend}
-          style={{ marginTop: 8, ...(disabled ? {} : { color: "white", backgroundColor: "#06153c" }) }}
+          style={{
+            marginTop: 8,
+            ...(disabled ? {} : { color: "white", backgroundColor: "#06153c" }),
+          }}
         >
           {loading || !amount || !toAddress ? <CaretUpOutlined /> : <SendOutlined style={{ color: "#FFFFFF" }} />}
-          <span style={{ "font-family": "romana", "padding-left": 20, "padding-right": 20 }}>Send</span>
+          <span
+            style={{
+              fontFamily: "romana",
+              paddingLeft: 20,
+              paddingRight: 20,
+            }}
+          >
+            Send
+          </span>
         </Button>
 
         {gasless.enabling ? (
@@ -175,7 +176,7 @@ function Home({ userSigner, address, mainnetProvider, selectedChainId, tx, write
         {gasless.lastTx ? (
           <span style={{ color: "rgb(0,200,0)" }}>
             Gasless transfer executed -{" "}
-            <a target="_blank" rel="noreferrer" href={`${explorer}/tx/${gasless.lastTx.transaction.hash}`}>
+            <a target="_blank" rel="noreferrer" href={`${network.blockExplorer}/tx/${gasless.lastTx.transaction.hash}`}>
               transaction
             </a>
           </span>

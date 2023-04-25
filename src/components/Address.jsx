@@ -1,42 +1,37 @@
-import { Skeleton, Typography } from "antd";
 import React from "react";
-import { useThemeSwitcher } from "react-css-theme-switcher";
-import Blockies from "react-blockies";
+import { Skeleton, Typography } from "antd";
 import { useLookupAddress } from "eth-hooks/dapps/ens";
-
-// changed value={address} to address={address}
 
 const { Text } = Typography;
 
-/** 
-  ~ What it does? ~
+/**
+ ~ What it does? ~
 
-  Displays an address with a blockie image and option to copy address
+ Displays an address with a blockie image and option to copy address
 
-  ~ How can I use? ~
+ ~ How can I use? ~
 
-  <Address
-    address={address}
-    ensProvider={mainnetProvider}
-    blockExplorer={blockExplorer}
-    fontSize={fontSize}
-  />
+ <Address
+ address={address}
+ provider={mainnetProvider}
+ blockExplorer={blockExplorer}
+ fontSize={fontSize}
+ />
 
-  ~ Features ~
+ ~ Features ~
 
-  - Provide ensProvider={mainnetProvider} and your address will be replaced by ENS name
-              (ex. "0xa870" => "user.eth")
-  - Provide blockExplorer={blockExplorer}, click on address and get the link
-              (ex. by default "https://etherscan.io/" or for xdai "https://blockscout.com/poa/xdai/")
-  - Provide fontSize={fontSize} to change the size of address text
-**/
+ - Provide provider={mainnetProvider} and your address will be replaced by ENS name
+ (ex. "0xa870" => "user.eth")
+ - Provide blockExplorer={blockExplorer}, click on address and get the link
+ (ex. by default "https://etherscan.io/" or for xdai "https://blockscout.com/poa/xdai/")
+ - Provide fontSize={fontSize} to change the size of address text
+ **/
 
 const blockExplorerLink = (address, blockExplorer) => `${blockExplorer || "https://etherscan.io/"}address/${address}`;
 
 export default function Address(props) {
-  const { currentTheme } = useThemeSwitcher();
   const address = props.value || props.address;
-  const ens = useLookupAddress(props.ensProvider, address);
+  const ens = useLookupAddress(props.provider, address);
   const ensSplit = ens && ens.split(".");
   const validEnsCheck = ensSplit && ensSplit[ensSplit.length - 1] === "eth";
   const etherscanLink = blockExplorerLink(address, props.blockExplorer);
@@ -61,39 +56,32 @@ export default function Address(props) {
   if (props.minimized) {
     return (
       <span style={{ verticalAlign: "middle" }}>
-        <a
-          style={{ color: currentTheme === "light" ? "#06153c" : "#ddd" }}
-          target="_blank"
-          href={etherscanLink}
-          rel="noopener noreferrer"
-        ></a>
+        <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
+          {displayAddress}
+        </a>
       </span>
     );
   }
 
   return (
     <span>
-      <span style={{ verticalAlign: "middle" }}></span>
-      <span style={{ verticalAlign: "middle", paddingLeft: 5, fontSize: props.fontSize ? props.fontSize : 28 }}>
+      <span style={{ verticalAlign: "middle" }} />
+      <span
+        style={{
+          verticalAlign: "middle",
+          paddingLeft: 5,
+          fontSize: props.fontSize ? props.fontSize : 28,
+        }}
+      >
         {props.onChange ? (
           <Text editable={{ onChange: props.onChange }} copyable={{ text: address }}>
-            <a
-              style={{ color: currentTheme === "light" ? "#06153c" : "#ddd" }}
-              target="_blank"
-              href={etherscanLink}
-              rel="noopener noreferrer"
-            >
+            <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
               {displayAddress}
             </a>
           </Text>
         ) : (
           <Text copyable={{ text: address }}>
-            <a
-              style={{ color: currentTheme === "light" ? "#06153c" : "#ddd" }}
-              target="_blank"
-              href={etherscanLink}
-              rel="noopener noreferrer"
-            >
+            <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
               {displayAddress}
             </a>
           </Text>

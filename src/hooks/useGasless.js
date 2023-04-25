@@ -4,7 +4,6 @@ import { SignatureTransfer } from "@uniswap/permit2-sdk";
 
 const REACT_APP_RELAYER_URL = process.env.REACT_APP_RELAYER_URL;
 const REACT_APP_ECO_TOKEN_ADDRESS = process.env.REACT_APP_ECO_TOKEN_ADDRESS;
-const REACT_APP_STAKED_ECOX_TOKEN_ADDRESS = process.env.REACT_APP_STAKED_ECOX_TOKEN_ADDRESS;
 
 const EIP2612_TYPES = {
   Permit: [
@@ -38,17 +37,9 @@ const ERC20_PERMIT_TOKEN_ABI = [
   "function allowance(address owner, address spender) external view returns (uint256)",
 ];
 
-const PERMIT2_ABI = ["function nonceBitmap(address owner, uint256 nonce) external view returns (uint256)"];
-
-const TOKENS = {
-  eco: {
-    name: "ECO",
-    address: REACT_APP_ECO_TOKEN_ADDRESS,
-  },
-  secox: {
-    name: "Staked ECOx",
-    address: REACT_APP_STAKED_ECOX_TOKEN_ADDRESS,
-  },
+const ECO_TOKEN = {
+  name: "ECO",
+  address: REACT_APP_ECO_TOKEN_ADDRESS,
 };
 
 function getTimestamp(add = 0) {
@@ -57,8 +48,7 @@ function getTimestamp(add = 0) {
 
 class Relayer {
   static async initialize(_token, signer) {
-    const token = Relayer.#getToken(_token);
-    const erc20 = Relayer.#getContract(token, signer);
+    const erc20 = Relayer.#getContract(ECO_TOKEN, signer);
 
     const address = await signer.getAddress();
     const network = await signer.provider.getNetwork();
@@ -66,9 +56,9 @@ class Relayer {
 
     const domain = {
       version: "1",
-      name: token.name,
+      name: ECO_TOKEN.name,
       chainId: network.chainId,
-      verifyingContract: token.address,
+      verifyingContract: ECO_TOKEN.address,
     };
 
     const message = {
@@ -101,12 +91,10 @@ class Relayer {
   }
 
   static async transfer(_token, signer, to, amount) {
-    const token = Relayer.#getToken(_token);
-
     const from = await signer.getAddress();
     const network = await signer.provider.getNetwork();
 
-    const nonce = await Relayer.#getNonce(token, signer);
+    const nonce = await Relayer.#getNonce(ECO_TOKEN, signer);
     const spender = await Relayer.#getRelayerAddress();
     const deadline = getTimestamp(1800).toString();
 
@@ -114,7 +102,7 @@ class Relayer {
       spender,
       deadline,
       nonce: nonce.toString(),
-      permitted: { amount: amount.toString(), token: token.address },
+      permitted: { amount: amount.toString(), token: ECO_TOKEN.address },
     };
 
     const { domain, types, values } = SignatureTransfer.getPermitData(permit, PERMIT2_ADDRESS, network.chainId);
@@ -134,23 +122,14 @@ class Relayer {
   }
 
   static async isEnabled(_token, signer) {
-    const token = Relayer.#getToken(_token);
-    const erc20 = Relayer.#getContract(token, signer);
+    const erc20 = Relayer.#getContract(ECO_TOKEN, signer);
     const address = await signer.getAddress();
     const allowance = await erc20.allowance(address, PERMIT2_ADDRESS);
     return allowance.gt(ethers.constants.Zero);
   }
 
-  static #getToken(_token) {
-    return TOKENS[_token];
-  }
-
   static #getContract(token, signer) {
     return new ethers.Contract(token.address, ERC20_PERMIT_TOKEN_ABI, signer.provider);
-  }
-
-  static #getPermit2Contract(signer) {
-    return new ethers.Contract(PERMIT2_ADDRESS, PERMIT2_ABI, signer.provider);
   }
 
   static #getUrl(path) {
