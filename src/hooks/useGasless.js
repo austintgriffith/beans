@@ -35,7 +35,7 @@ const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const SPONSOR_ADDRESS = process.env.REACT_APP_SPONSOR_ADDRESS;
 
 // 5 tokens
-const SPONSOR_FEE_AMOUNT = ethers.constants.WeiPerEther.mul(5);
+const SPONSOR_MINIMUM_FEE_AMOUNT = ethers.constants.WeiPerEther.mul(5);
 
 const ERC20_PERMIT_TOKEN_ABI = [
   "function transfer(address _to, uint256 _value) public returns (bool success)",
@@ -123,8 +123,8 @@ class Relayer {
     return response;
   }
 
-  static async sponsorTransfer(signer, to, amount) {
-    const execution = await Relayer.#getExecutionForSingleTransfer(signer, to, amount);
+  static async sponsorTransfer(signer, to, amount, fee) {
+    const execution = await Relayer.#getExecutionForSingleTransfer(signer, to, amount, fee);
     const network = await signer.provider.getNetwork();
 
     const permit = {
@@ -161,7 +161,7 @@ class Relayer {
     return allowance.gt(ethers.constants.Zero);
   }
 
-  static async #getExecutionForSingleTransfer(signer, to, amount) {
+  static async #getExecutionForSingleTransfer(signer, to, amount, fee) {
     const sender = await signer.getAddress();
     const eco = Relayer.#getContract(signer);
 
@@ -173,8 +173,8 @@ class Relayer {
       deadline: getTimestamp(1800).toString(),
       conditions: [],
       operations: [{ to: ECO_TOKEN.address, data }],
-      payment: { token: ECO_TOKEN.address, amount: SPONSOR_FEE_AMOUNT.toHexString() },
-      tokens: [{ token: ECO_TOKEN.address, amount: amount.add(SPONSOR_FEE_AMOUNT).toHexString() }],
+      payment: { token: ECO_TOKEN.address, amount: fee.toHexString() },
+      tokens: [{ token: ECO_TOKEN.address, amount: amount.add(fee).toHexString() }],
     };
   }
 
@@ -240,7 +240,7 @@ export const useGasless = signer => {
     }
   };
 
-  const transfer = async (to, amount) => {
+  const transfer = async (to, amount, fee = SPONSOR_MINIMUM_FEE_AMOUNT) => {
     if (loading) return;
     setError(null);
     setLastTx(null);
@@ -249,7 +249,7 @@ export const useGasless = signer => {
       // If gasless feature is not enabled, enable it
       if (!enabled) await enable();
 
-      const { transaction } = await Relayer.sponsorTransfer(signer, to, amount);
+      const { transaction } = await Relayer.sponsorTransfer(signer, to, amount, fee);
       setLastTx({ type: "transfer", transaction });
     } catch (e) {
       console.error("[gasless:error:transfer]", e);

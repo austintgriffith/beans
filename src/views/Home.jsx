@@ -18,6 +18,14 @@ function round(number, decimals) {
   return Math.round((number + Number.EPSILON) * d) / d;
 }
 
+function getTotal(amount, fee) {
+  try {
+    return formatAmount(amount).abs().add(formatAmount(fee).abs());
+  } catch (e) {
+    return ethers.constants.Zero;
+  }
+}
+
 function Home({ network, userSigner, address, localProvider }) {
   const navigate = useNavigate();
 
@@ -36,8 +44,9 @@ function Home({ network, userSigner, address, localProvider }) {
 
   const gasless = useGasless(userSigner);
 
-  const [toAddress, setToAddress] = useState();
+  const [fee, setFee] = useState("5");
   const [amount, setAmount] = useState();
+  const [toAddress, setToAddress] = useState();
 
   let scanner;
 
@@ -53,8 +62,9 @@ function Home({ network, userSigner, address, localProvider }) {
   const doSend = async () => {
     setLoading(true);
     const value = formatAmount(amount);
+    const feeValue = formatAmount(fee);
     try {
-      await gasless.transfer(toAddress, value);
+      await gasless.transfer(toAddress, value, feeValue);
       setAmount("");
     } catch (e) {
       console.log("[gasless:transfer]", e);
@@ -67,7 +77,10 @@ function Home({ network, userSigner, address, localProvider }) {
     if (event.key === "Enter") doSend();
   };
 
-  const disabled = loading || !amount || !toAddress;
+  const total = getTotal(amount, fee);
+  const exceedsBalance = total.gt(balance || ethers.constants.Zero);
+
+  const disabled = exceedsBalance || loading || !amount || !toAddress;
 
   return (
     <div>
@@ -130,6 +143,35 @@ function Home({ network, userSigner, address, localProvider }) {
           onKeyPress={handleKey}
         />
       </div>
+      <div style={{ margin: "auto", marginTop: 32, width: 300 }}>
+        <Input
+          size="large"
+          type="number"
+          min="5"
+          pattern="\d*"
+          prefix={<b style={{ fontSize: 16 }}>Fee</b>}
+          placeholder="fee to pay"
+          value={fee}
+          style={{
+            width: 300,
+            fontSize: 20,
+            fontFamily: "'Rubik', sans-serif",
+          }}
+          onChange={e => setFee(e.target.value)}
+          onKeyPress={handleKey}
+        />
+      </div>
+
+      <span style={{ color: "#06153c" }}>
+        <b>Note:</b> minimun fee is 5 ECO tokens
+      </span>
+
+      {exceedsBalance ? (
+        <div style={{ marginTop: 8 }}>
+          <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
+        </div>
+      ) : null}
+
       <div
         style={{
           display: "flex",
@@ -163,10 +205,6 @@ function Home({ network, userSigner, address, localProvider }) {
             Send
           </span>
         </Button>
-
-        <span style={{ color: "#06153c" }}>
-          <b>Fee:</b> 5 ECO tokens
-        </span>
 
         {gasless.enabling ? (
           <span style={{ color: "#06153c" }}>Enabling gasless transactions...</span>

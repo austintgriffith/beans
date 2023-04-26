@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-export function formatAmount(amount) {
+export function formatAmount(amount = 0) {
   try {
     return ethers.utils.parseEther(amount.toString());
   } catch (e) {
