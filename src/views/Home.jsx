@@ -64,10 +64,7 @@ function Home({ network, userSigner, address, localProvider }) {
   };
 
   const handleKey = event => {
-    console.log("ENTER", event);
-    if (event.key === "Enter") {
-      doSend();
-    }
+    if (event.key === "Enter") doSend();
   };
 
   const disabled = loading || !amount || !toAddress;
@@ -166,6 +163,10 @@ function Home({ network, userSigner, address, localProvider }) {
             Send
           </span>
         </Button>
+
+        <span style={{ color: "#06153c" }}>
+          <b>Fee:</b> 5 ECO tokens
+        </span>
 
         {gasless.enabling ? (
           <span style={{ color: "#06153c" }}>Enabling gasless transactions...</span>
