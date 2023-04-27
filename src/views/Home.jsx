@@ -80,7 +80,7 @@ function Home({ network, userSigner, address, localProvider }) {
   const total = getTotal(amount, fee);
   const exceedsBalance = total.gt(balance || ethers.constants.Zero);
 
-  const disabled = exceedsBalance || loading || !amount || !toAddress;
+  const disabled = exceedsBalance || loading || !fee || !amount || !toAddress;
 
   return (
     <div>
@@ -166,7 +166,7 @@ function Home({ network, userSigner, address, localProvider }) {
         <b>Note:</b> minimun fee is 5 ECO tokens
       </span>
 
-      {exceedsBalance ? (
+      {exceedsBalance && amount ? (
         <div style={{ marginTop: 8 }}>
           <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
         </div>
