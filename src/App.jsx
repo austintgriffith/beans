@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { useBurnerSigner } from "eth-hooks";
 
 import { NETWORKS } from "./constants";
 import { About, Home } from "./views";
@@ -10,17 +9,15 @@ import { StackupProvider } from "./contexts/StackupContext";
 
 import "./index.css";
 import "./App.css";
-import "antd/dist/antd.css";
+
+import "antd/dist/reset.css";
+import { useBurnerWallet } from "./hooks/useBurnerWallet";
 
 const network = NETWORKS[process.env.REACT_APP_NETWORK ?? "goerli"];
 
 function App() {
   const provider = useStaticJsonRPC(network.rpcUrl, network.chainId);
-  const { signer, loadOrGenerateBurner } = useBurnerSigner(provider);
-
-  useEffect(() => {
-    if (!signer && provider) loadOrGenerateBurner();
-  }, [loadOrGenerateBurner, provider, signer]);
+  const signer = useBurnerWallet(provider);
 
   const routes = (
     <Routes>

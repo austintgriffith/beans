@@ -22,14 +22,12 @@ function getTotal(amount) {
 }
 
 function Home({ network, signer, provider }) {
-  const navigate = useNavigate();
-
-  const eco = useMemo(() => new ethers.Contract(REACT_APP_ECO_TOKEN_ADDRESS, ERC20_ABI, signer), [signer]);
-
   const stackup = useStackup();
+  const navigate = useNavigate();
 
   const address = stackup.simpleAccount?.getSender();
 
+  const eco = useMemo(() => new ethers.Contract(REACT_APP_ECO_TOKEN_ADDRESS, ERC20_ABI, provider), [provider]);
   const [balance] = useContractReader(eco, eco.balanceOf, [address], 4000);
 
   const [loading, setLoading] = useState(false);

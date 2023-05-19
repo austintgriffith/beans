@@ -1,10 +1,17 @@
 import React, { useMemo } from "react";
-import QR from "qrcode.react";
+import { QRCodeSVG as QR } from "qrcode.react";
 import { message } from "antd";
 
 const hardcodedSizeForNow = 320;
 
-export default function QRPunkBlockie(props) {
+interface QRPunkBlockieProps {
+  address: string;
+  scale?: string;
+  withQr?: boolean;
+  showAddress?: boolean;
+}
+
+export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
   const qrValue = useMemo(() => {
     const url = new URL("", window.location.origin);
     url.searchParams.set("addr", props.address);
@@ -72,4 +79,6 @@ export default function QRPunkBlockie(props) {
       ) : null}
     </div>
   );
-}
+};
+
+export default QRPunkBlockie;
