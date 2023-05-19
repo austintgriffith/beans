@@ -2,7 +2,7 @@ import { Input } from "antd";
 import React, { useCallback, useState } from "react";
 import { ethers } from "ethers";
 import { QrcodeOutlined } from "@ant-design/icons";
-import { useLookupAddress } from "eth-hooks/dapps/ens";
+import { useResolveEnsAddress } from "eth-hooks/dapps";
 import QrReader from "react-qr-reader";
 
 const isENS = (address = "") => address.endsWith(".eth") || address.endsWith(".xyz");
@@ -39,7 +39,7 @@ export default function AddressInput(props) {
   const [scan, setScan] = useState(false);
 
   const currentValue = typeof props.value !== "undefined" ? props.value : value;
-  const ens = useLookupAddress(props.ensProvider, currentValue);
+  const [ens] = useResolveEnsAddress(props.ensProvider, currentValue);
 
   const updateAddress = useCallback(
     async newValue => {
@@ -87,7 +87,7 @@ export default function AddressInput(props) {
             delay={250}
             resolution={1200}
             style={{ width: "100%" }}
-            onError={e => setScan(false)}
+            onError={() => setScan(false)}
             onScan={newValue => {
               if (newValue) {
                 newValue = newValue.replace("ethereum:", "");

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { ExecutionLib } from "../helpers/executionLib";
 import { SignatureTransfer } from "@uniswap/permit2-sdk";
+
+import { ExecutionLib } from "../helpers";
 
 const REACT_APP_RELAYER_URL = process.env.REACT_APP_RELAYER_URL;
 const REACT_APP_ECO_TOKEN_ADDRESS = process.env.REACT_APP_ECO_TOKEN_ADDRESS;

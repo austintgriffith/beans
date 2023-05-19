@@ -1,50 +1,40 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Input } from "antd";
-import { CaretUpOutlined, ScanOutlined, SendOutlined } from "@ant-design/icons";
 import { ethers } from "ethers";
+import { Button, Input, Space } from "antd";
 import { useContractReader } from "eth-hooks";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { CaretUpOutlined, ScanOutlined, SendOutlined } from "@ant-design/icons";
 
 import AddressInput from "../components/AddressInput";
 import QRPunkBlockie from "../components/QRPunkBlockie";
-import { useGasless } from "../hooks";
-import { formatAmount } from "../helpers/formatAmount";
+import { formatAmount, round } from "../helpers";
+import { useStackup } from "../contexts/StackupContext";
 
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
 const REACT_APP_ECO_TOKEN_ADDRESS = process.env.REACT_APP_ECO_TOKEN_ADDRESS;
 
-function round(number, decimals) {
-  const d = Math.pow(10, decimals);
-  return Math.round((number + Number.EPSILON) * d) / d;
-}
-
-function getTotal(amount, fee) {
+function getTotal(amount) {
   try {
-    return formatAmount(amount).abs().add(formatAmount(fee).abs());
+    return formatAmount(amount).abs();
   } catch (e) {
     return ethers.constants.Zero;
   }
 }
 
-function Home({ network, userSigner, address, localProvider }) {
+function Home({ network, signer, provider }) {
   const navigate = useNavigate();
 
-  const readContracts = useMemo(
-    () => ({
-      ECO: new ethers.Contract(REACT_APP_ECO_TOKEN_ADDRESS, ERC20_ABI, userSigner),
-    }),
-    [userSigner],
-  );
+  const eco = useMemo(() => new ethers.Contract(REACT_APP_ECO_TOKEN_ADDRESS, ERC20_ABI, signer), [signer]);
 
-  // you can also use hooks locally in your component of choice
-  // in this case, let's keep track of 'purpose' variable from our contract
-  const balance = useContractReader(readContracts, "ECO", "balanceOf", [address], 4000);
+  const stackup = useStackup();
+
+  const address = stackup.simpleAccount?.getSender();
+
+  const [balance] = useContractReader(eco, eco.balanceOf, [address], 4000);
 
   const [loading, setLoading] = useState(false);
+  const [lastTx, setLastTx] = useState("");
 
-  const gasless = useGasless(userSigner);
-
-  const [fee, setFee] = useState("5");
   const [amount, setAmount] = useState();
   const [toAddress, setToAddress] = useState();
 
@@ -61,11 +51,12 @@ function Home({ network, userSigner, address, localProvider }) {
 
   const doSend = async () => {
     setLoading(true);
+    setLastTx("");
     const value = formatAmount(amount);
-    const feeValue = formatAmount(fee);
     try {
-      await gasless.transfer(toAddress, value, feeValue);
+      const txHash = await stackup.transfer(toAddress, value);
       setAmount("");
+      setLastTx(txHash);
     } catch (e) {
       console.log("[gasless:transfer]", e);
     } finally {
@@ -77,13 +68,13 @@ function Home({ network, userSigner, address, localProvider }) {
     if (event.key === "Enter") doSend();
   };
 
-  const total = getTotal(amount, fee);
+  const total = getTotal(amount);
   const exceedsBalance = total.gt(balance || ethers.constants.Zero);
 
-  const disabled = exceedsBalance || loading || !fee || !amount || !toAddress;
+  const disabled = exceedsBalance || loading || !amount || !toAddress;
 
   return (
-    <div>
+    <Space direction="vertical" style={{ marginTop: 24 }}>
       <div
         style={{
           display: "flex",
@@ -93,15 +84,14 @@ function Home({ network, userSigner, address, localProvider }) {
           margin: "auto",
           textAlign: "right",
           gap: 8,
-          marginTop: 16,
           width: 500,
           fontFamily: "'Rubik', sans-serif",
-          fontSize: 72,
+          fontSize: 50,
           letterSpacing: -0.5,
         }}
       >
-        <span style={{ fontSize: 60, letterSpacing: 0 }}>ⓔ</span>
-        {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 4).toFixed(4) : "---"}
+        <span style={{ fontSize: 36, letterSpacing: 0 }}>ⓔ</span>
+        {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 3) : "---"}
       </div>
 
       <div
@@ -121,7 +111,7 @@ function Home({ network, userSigner, address, localProvider }) {
           placeholder="to address"
           value={toAddress}
           onChange={setToAddress}
-          ensProvider={localProvider}
+          ensProvider={provider}
           hoistScanner={toggle => (scanner = toggle)}
         />
       </div>
@@ -140,24 +130,6 @@ function Home({ network, userSigner, address, localProvider }) {
             fontFamily: "'Rubik', sans-serif",
           }}
           onChange={e => setAmount(e.target.value)}
-          onKeyPress={handleKey}
-        />
-      </div>
-      <div style={{ margin: "auto", marginTop: 32, width: 300 }}>
-        <Input
-          size="large"
-          type="number"
-          min="5"
-          pattern="\d*"
-          prefix={<b style={{ fontSize: 16 }}>Fee</b>}
-          placeholder="fee to pay"
-          value={fee}
-          style={{
-            width: 300,
-            fontSize: 20,
-            fontFamily: "'Rubik', sans-serif",
-          }}
-          onChange={e => setFee(e.target.value)}
           onKeyPress={handleKey}
         />
       </div>
@@ -206,20 +178,17 @@ function Home({ network, userSigner, address, localProvider }) {
           </span>
         </Button>
 
-        {gasless.enabling ? (
-          <span style={{ color: "#06153c" }}>Enabling gasless transactions...</span>
-        ) : gasless.loading ? (
+        {loading ? (
           <span style={{ color: "#06153c" }}>Transferring tokens...</span>
-        ) : null}
-        {gasless.error ? <span style={{ color: "rgb(200,0,0)" }}>{gasless.error}</span> : null}
-        {gasless.lastTx ? (
+        ) : lastTx ? (
           <span style={{ color: "rgb(0,200,0)" }}>
             Gasless transfer executed -{" "}
-            <a target="_blank" rel="noreferrer" href={`${network.blockExplorer}/tx/${gasless.lastTx.transaction.hash}`}>
+            <a target="_blank" rel="noreferrer" href={`${network.blockExplorer}/tx/${lastTx}`}>
               transaction
             </a>
           </span>
         ) : null}
+        {/*{gasless.error ? <span style={{ color: "rgb(200,0,0)" }}>{gasless.error}</span> : null}*/}
 
         <div
           style={{
@@ -244,7 +213,7 @@ function Home({ network, userSigner, address, localProvider }) {
           </Button>
         </div>
       </div>
-    </div>
+    </Space>
   );
 }
 

@@ -64,4 +64,11 @@ export const NETWORKS = {
     blockExplorer: "https://optimistic.etherscan.io/",
     rpcUrl: `https://mainnet.optimism.io`,
   },
+  "goerli-optimism": {
+    name: "Goerli optimism",
+    color: "#f01a37",
+    chainId: 420,
+    blockExplorer: "https://goerli-optimism.etherscan.io/",
+    rpcUrl: `https://goerli.optimism.io`,
+  },
 };

@@ -78,29 +78,13 @@ export default function Wallet({ address, padding, color, provider, size }) {
       );
     } else {
       const extraPkDisplayAdded = {};
-      const extraPkDisplay = [];
       extraPkDisplayAdded[wallet.address] = true;
-      extraPkDisplay.push(
-        <div style={{ fontSize: 16, padding: 2, backgroundStyle: "#89e789" }}>
-          <a href={"/pk#" + pk}>
-            <Address minimized address={wallet.address} provider={provider} /> {wallet.address.substr(0, 6)}
-          </a>
-        </div>,
-      );
       for (const key in localStorage) {
         if (key.indexOf("metaPrivateKey_backup") >= 0) {
           const pastpk = localStorage.getItem(key);
           const pastwallet = new ethers.Wallet(pastpk);
-          if (!extraPkDisplayAdded[pastwallet.address] /* && selectedAddress!=pastwallet.address */) {
+          if (!extraPkDisplayAdded[pastwallet.address]) {
             extraPkDisplayAdded[pastwallet.address] = true;
-            extraPkDisplay.push(
-              <div style={{ fontSize: 16 }}>
-                <a href={"/pk#" + pastpk}>
-                  <Address minimized address={pastwallet.address} provider={provider} />{" "}
-                  {pastwallet.address.substr(0, 6)}
-                </a>
-              </div>,
-            );
           }
         }
       }

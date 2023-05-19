@@ -1,6 +1,6 @@
 import React from "react";
 import { Skeleton, Typography } from "antd";
-import { useLookupAddress } from "eth-hooks/dapps/ens";
+import { useResolveEnsAddress } from "eth-hooks/dapps";
 
 const { Text } = Typography;
 
@@ -31,7 +31,7 @@ const blockExplorerLink = (address, blockExplorer) => `${blockExplorer || "https
 
 export default function Address(props) {
   const address = props.value || props.address;
-  const ens = useLookupAddress(props.provider, address);
+  const [ens] = useResolveEnsAddress(props.provider, address);
   const ensSplit = ens && ens.split(".");
   const validEnsCheck = ensSplit && ensSplit[ensSplit.length - 1] === "eth";
   const etherscanLink = blockExplorerLink(address, props.blockExplorer);

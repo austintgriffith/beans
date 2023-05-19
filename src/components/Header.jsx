@@ -1,43 +1,53 @@
 import React from "react";
-import { Typography } from "antd";
+import { Col, Row } from "antd";
+import { Link, useLocation } from "react-router-dom";
 
-const { Title, Text } = Typography;
+import { ReactComponent as EcoLogo } from "../assets/images/eco-logo.svg";
 
-// displays a page header
+import "./Header.css";
 
-export default function Header({ link, title, subTitle, ...props }) {
+const Item = ({ to, children }) => {
+  const location = useLocation();
+  const selected = to === location.pathname;
+
+  const classes = ["header-item"];
+  if (selected) classes.push("selected");
+
   return (
-    <div
+    <Link to={to} className={classes.join(" ")}>
+      {children}
+    </Link>
+  );
+};
+
+export default function Header({ ...props }) {
+  return (
+    <Row
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "1.2rem",
+        padding: "32px 40px",
+        margin: 16,
+        backgroundColor: "rgba(249,249,245,0.95)",
+        backdropFilter: "blur(8px)",
+        borderRadius: 24,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          alignItems: "start",
-        }}
-      >
-        <a href={link} target="_blank" rel="noopener noreferrer">
-          <Title level={4} style={{ margin: "0 0.5rem 0 0" }}>
-            {title}
-          </Title>
-        </a>
-        <Text type="secondary" style={{ textAlign: "left" }}>
-          {subTitle}
-        </Text>
-      </div>
-      {props.children}
-    </div>
+      <Col flex="100px" style={{ display: "flex", alignItems: "center" }}>
+        <EcoLogo />
+      </Col>
+      <Col flex="auto" style={{ display: "flex", justifyContent: "end", paddingRight: 40 }}>
+        <Row
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 48,
+          }}
+        >
+          <Item to="/">Home</Item>
+          <Item to="/about">About</Item>
+        </Row>
+      </Col>
+      <Col flex="40px">{props.children}</Col>
+    </Row>
   );
 }
-
-Header.defaultProps = {
-  link: "",
-  title: "",
-  subTitle: "",
-};

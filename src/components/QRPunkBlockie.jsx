@@ -2,9 +2,9 @@ import React, { useMemo } from "react";
 import QR from "qrcode.react";
 import { message } from "antd";
 
-export default function QRPunkBlockie(props) {
-  const hardcodedSizeForNow = 380;
+const hardcodedSizeForNow = 320;
 
+export default function QRPunkBlockie(props) {
   const qrValue = useMemo(() => {
     const url = new URL("", window.location.origin);
     url.searchParams.set("addr", props.address);
@@ -19,6 +19,7 @@ export default function QRPunkBlockie(props) {
         transformOrigin: "50% 50%",
         transform: "scale(" + (props.scale ? props.scale : "1") + ")",
         width: hardcodedSizeForNow,
+        height: hardcodedSizeForNow,
       }}
       onClick={() => {
         const el = document.createElement("textarea");
@@ -40,6 +41,7 @@ export default function QRPunkBlockie(props) {
           position: "absolute",
           left: hardcodedSizeForNow / 2 - 46,
           top: hardcodedSizeForNow / 2 - 46,
+          zIndex: 100,
         }}
       >
         <img alt="logo" src="./$ECO_square.png" style={{ width: 92, height: 92 }} />
@@ -47,15 +49,14 @@ export default function QRPunkBlockie(props) {
 
       {props.withQr ? (
         <QR
-          level={"H"}
-          includeMargin={false}
+          level="H"
+          style={{ opacity: qrValue ? 1 : 0.0, transition: ".3s ease opacity" }}
           value={qrValue}
+          includeMargin={false}
           size={hardcodedSizeForNow}
           imageSettings={{ width: 105, height: 105, excavate: true, src: "" }}
         />
-      ) : (
-        ""
-      )}
+      ) : null}
 
       {props.showAddress ? (
         <div
@@ -68,9 +69,11 @@ export default function QRPunkBlockie(props) {
         >
           {props.address}
         </div>
-      ) : (
-        ""
-      )}
+      ) : null}
     </div>
   );
 }
+
+
+// https://goerli-optimism.etherscan.io/tx/0x7b0a63e7763130774954ef5d2c20964b9f844b379ded7bb9020c37cedd303b09
+// https://goerli-optimistic.etherscan.io//tx/0x7b0a63e7763130774954ef5d2c20964b9f844b379ded7bb9020c37cedd303b09
