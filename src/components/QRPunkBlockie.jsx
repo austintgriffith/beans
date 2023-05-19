@@ -73,7 +73,3 @@ export default function QRPunkBlockie(props) {
     </div>
   );
 }
-
-
-// https://goerli-optimism.etherscan.io/tx/0x7b0a63e7763130774954ef5d2c20964b9f844b379ded7bb9020c37cedd303b09
-// https://goerli-optimistic.etherscan.io//tx/0x7b0a63e7763130774954ef5d2c20964b9f844b379ded7bb9020c37cedd303b09

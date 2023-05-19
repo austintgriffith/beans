@@ -6,7 +6,5 @@ export default function Account({ signer, localProvider }) {
   const stackup = useStackup();
   const address = stackup.simpleAccount?.getSender();
   if (!address) return null;
-  return (
-    <Wallet padding="0px" color="#06153c" address={address} signer={signer} provider={localProvider} size={24} />
-  );
+  return <Wallet padding="0px" color="#06153c" address={address} signer={signer} provider={localProvider} size={24} />;
 }
