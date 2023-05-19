@@ -122,7 +122,6 @@ export default function AddressInput(props) {
         addonAfter={
           <div
             style={{
-              marginTop: 4,
               cursor: props.disabled ? "not-allowed" : "pointer",
             }}
             onClick={() => !props.disabled && setScan(!scan)}

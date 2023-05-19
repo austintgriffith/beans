@@ -132,10 +132,6 @@ function Home({ network, signer, provider }) {
         />
       </div>
 
-      <span style={{ color: "#06153c" }}>
-        <b>Note:</b> minimun fee is 5 ECO tokens
-      </span>
-
       {exceedsBalance && amount ? (
         <div style={{ marginTop: 8 }}>
           <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
