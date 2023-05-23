@@ -10,7 +10,7 @@ const isENS = (address = "") => address.endsWith(".eth") || address.endsWith(".x
 const provider = new ethers.providers.InfuraProvider("mainnet", process.env.REACT_APP_INFURA_ID);
 
 export default function AddressInput(props) {
-  const { ensProvider, onChange } = props;
+  const { onChange } = props;
   const [value, setValue] = useState(props.value);
   const [scan, setScan] = useState(false);
 
@@ -23,7 +23,7 @@ export default function AddressInput(props) {
         let address = newValue;
         if (isENS(address)) {
           try {
-            const possibleAddress = await ensProvider.resolveName(address);
+            const possibleAddress = await provider.resolveName(address);
             if (possibleAddress) {
               address = possibleAddress;
             }
@@ -36,7 +36,7 @@ export default function AddressInput(props) {
         }
       }
     },
-    [ensProvider, onChange],
+    [onChange],
   );
 
   props &&
