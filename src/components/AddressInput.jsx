@@ -7,13 +7,15 @@ import QrReader from "react-qr-reader";
 
 const isENS = (address = "") => address.endsWith(".eth") || address.endsWith(".xyz");
 
+const provider = new ethers.providers.InfuraProvider("mainnet", process.env.REACT_APP_INFURA_ID);
+
 export default function AddressInput(props) {
   const { ensProvider, onChange } = props;
   const [value, setValue] = useState(props.value);
   const [scan, setScan] = useState(false);
 
   const currentValue = typeof props.value !== "undefined" ? props.value : value;
-  const [ens] = useResolveEnsAddress(props.ensProvider, currentValue);
+  const [ens] = useResolveEnsAddress(provider, currentValue);
 
   const updateAddress = useCallback(
     async newValue => {

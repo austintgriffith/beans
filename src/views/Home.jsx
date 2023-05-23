@@ -112,7 +112,6 @@ function Home({ network, provider }) {
           placeholder="to address"
           value={toAddress}
           onChange={setToAddress}
-          ensProvider={provider}
           hoistScanner={toggle => (scanner = toggle)}
         />
       </div>
