@@ -3,13 +3,19 @@ import { ethers } from "ethers";
 import { Client, Presets } from "userop";
 import { SimpleAccount } from "userop/dist/preset/builder";
 
+import { ERC20_ABI } from "../assets/abis/ERC20";
+import { useQuery } from "react-query";
+
 interface IStackupProvider {
   client?: Client;
   simpleAccount?: SimpleAccount;
+  expectedGasFee: ethers.BigNumber;
+
   transfer(to: string, amount: ethers.BigNumber): Promise<string>;
 }
 
 const StackupContext = React.createContext<IStackupProvider>({
+  expectedGasFee: ethers.constants.Zero,
   async transfer() {
     return "";
   },
@@ -36,62 +42,26 @@ const config = {
   },
 };
 
-const ERC20_ABI = [
-  {
-    name: "transfer",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [
-      {
-        internalType: "address",
-        name: "recipient",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-  },
-
-  {
-    name: "approve",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [
-      {
-        internalType: "address",
-        name: "spender",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-  },
-];
-
 interface StackupProviderProps {
   provider: ethers.providers.Provider;
   signer: ethers.Signer;
 }
+
+const hasWalletBeenDeployed = async (provider: any, address: string) => {
+  try {
+    const code = await provider.getCode(address);
+    return code !== "0x";
+  } catch (e) {
+    console.error("Error determining if SWA is already deployed", e);
+  }
+  return false;
+};
+
+const paymaster = Presets.Middleware.verifyingPaymaster(config.paymaster.rpcUrl, config.paymaster.context);
+
+const ERC20_TRANSFER_GAS = 91_000;
+const VALIDATION_GAS = 100_000;
+const INIT_CODE_GAS = 385_266;
 
 export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderProps>> = ({
   signer,
@@ -105,8 +75,6 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
     (async () => {
       // Init Simple Account
       try {
-        const paymaster = Presets.Middleware.verifyingPaymaster(config.paymaster.rpcUrl, config.paymaster.context);
-
         const simpleAccount = await Presets.Builder.SimpleAccount.init(
           signer,
           config.rpcUrl,
@@ -114,7 +82,6 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
           config.simpleAccountFactory,
           paymaster,
         );
-
         setSimpleAccount(simpleAccount);
       } catch (err) {}
 
@@ -126,36 +93,31 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
     })();
   }, [signer]);
 
-  const transfer = async (t: string, amount: ethers.BigNumber): Promise<string> => {
-    if (!client || !simpleAccount) return "";
-
-    const to = ethers.utils.getAddress(t);
+  const buildOps = async (to: string, amount: ethers.BigNumber) => {
+    if (!simpleAccount) return;
 
     const erc20 = new ethers.Contract(ECO_TOKEN, ERC20_ABI, provider);
-
-    let hasBeenCreated;
-    try {
-      const code = await (client as any).provider.getCode(simpleAccount.getSender());
-      hasBeenCreated = code !== "0x";
-    } catch (e) {
-      console.error("Error determining if SWA is already deployed", e);
-    }
-
-    const contract = erc20.address;
     const data = erc20.interface.encodeFunctionData("transfer", [to, amount]);
 
-    if (hasBeenCreated) {
-      simpleAccount.execute(contract, 0, data);
+    const hasBeenDeployed = await hasWalletBeenDeployed((client as any).provider, simpleAccount.getSender());
+    if (hasBeenDeployed) {
+      simpleAccount.execute(erc20.address, 0, data);
     } else {
       // Execute transaction and approve Paymaster to spend tokens to pay gas fees in ECO tokens
       simpleAccount.executeBatch(
-        [contract, erc20.address],
+        [erc20.address, erc20.address],
         [
           data,
           erc20.interface.encodeFunctionData("approve", [VERIFYING_PAYMASTER_ADDRESS, ethers.constants.MaxUint256]),
         ],
       );
     }
+  };
+
+  const transfer = async (t: string, amount: ethers.BigNumber): Promise<string> => {
+    if (!client || !simpleAccount) return "";
+
+    await buildOps(ethers.utils.getAddress(t), amount);
 
     const res = await client.sendUserOperation(simpleAccount);
     console.log("Waiting for transaction...");
@@ -164,12 +126,32 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
     return ev!.transactionHash;
   };
 
+  const { data: expectedGasFee } = useQuery(
+    "expected-gas-fee",
+    async () => {
+      if (!simpleAccount || !client) return ethers.constants.Zero;
+
+      const provider = (client as any).provider as ethers.providers.JsonRpcProvider;
+      const gasPrice = await provider.getGasPrice();
+
+      let gas = ERC20_TRANSFER_GAS + VALIDATION_GAS;
+      const hasBeenDeployed = await hasWalletBeenDeployed(provider, simpleAccount.getSender());
+      if (!hasBeenDeployed) {
+        gas += INIT_CODE_GAS;
+      }
+
+      return gasPrice.mul(gas);
+    },
+    { enabled: !!simpleAccount && !!client, initialData: ethers.constants.Zero },
+  );
+
   return (
     <StackupContext.Provider
       value={{
         simpleAccount,
         client,
         transfer,
+        expectedGasFee: expectedGasFee!,
       }}
     >
       {children}

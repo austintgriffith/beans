@@ -1,54 +1,63 @@
+body {
+  margin: 0;
+}
+
 .App {
   text-align: center;
   padding-left: calc(100vw - 100%);
 }
 
 @font-face {
-  font-family: 'rubik';
-  src: url('./fonts/Rubik-Regular.ttf') format('truetype');
+  font-family: "rubik";
+  src: url("./fonts/Rubik-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'rubik';
-  src: url('./fonts/Rubik-Italic.ttf') format('truetype');
+  font-family: "rubik";
+  src: url("./fonts/Rubik-Italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'rubik';
-  src: url('./fonts/Rubik-Medium.ttf') format('truetype');
+  font-family: "rubik";
+  src: url("./fonts/Rubik-Medium.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'rubik';
-  src: url('./fonts/Rubik-MediumItalic.ttf') format('truetype');
+  font-family: "rubik";
+  src: url("./fonts/Rubik-MediumItalic.ttf") format("truetype");
   font-weight: 600;
   font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'romana';
-  src: url('./fonts/PTSerif-Bold.ttf') format('truetype');
+  font-family: "romana";
+  src: url("./fonts/PTSerif-Bold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
-h1, h2, h3, h4, h5 {
-  font-family: 'romana';
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "romana";
 }
 
-html,body {
-  font-family: 'rubik' !important;
+html,
+body {
+  font-family: "rubik" !important;
 }
 
 .ant-input {

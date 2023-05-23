@@ -5,7 +5,7 @@ import Wallet from "./Wallet";
 
 interface AccountProps {
   signer: ethers.Wallet;
-  provider: ethers.providers.Provider;
+  provider: ethers.providers.JsonRpcProvider;
 }
 
 export const Account: React.FC<AccountProps> = ({ signer, provider }) => {
@@ -21,5 +21,3 @@ export const Account: React.FC<AccountProps> = ({ signer, provider }) => {
   if (!address) return null;
   return <Wallet padding="0px" color="#06153c" address={address} signer={signer} provider={provider} size={24} />;
 };
-
-export default Account;

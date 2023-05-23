@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { Button, Modal, Spin, Tooltip } from "antd";
-import { KeyOutlined, SettingOutlined } from "@ant-design/icons";
+import { KeyOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
 
 import Address from "./Address";
 import WalletImport from "./WalletImport";
@@ -11,7 +11,7 @@ interface WalletProps {
   padding: string;
   color: string;
   size: number;
-  provider: ethers.providers.Provider;
+  provider: ethers.providers.JsonRpcProvider;
   signer: ethers.Wallet;
 }
 
@@ -38,8 +38,8 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
   );
 
   const showImportButton = (
-    <Button style={{ marginTop: 16 }} onClick={() => setShowImport(true)}>
-      <span style={{ marginRight: 8 }}>💾</span>Log In
+    <Button onClick={() => setShowImport(true)} icon={<SaveOutlined />}>
+      Log In
     </Button>
   );
 
@@ -83,9 +83,9 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
                 <input type="text" name="username" value={"Eco Wallet - " + address} />
                 <input type="password" name="password" value={pk} />
               </span>
-              <button id="submitPk" type="submit" value="Save Access">
+              <Button id="submitPk" value="Save Access" htmlType="submit">
                 Save Access
-              </button>
+              </Button>
             </form>
 
             <br />
@@ -95,14 +95,14 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
     }
 
     privateKeyButton = (
-      <Button key="hide" onClick={() => setPK("")}>
-        <KeyOutlined /> Hide
+      <Button key="hide" onClick={() => setPK("")} icon={<KeyOutlined />}>
+        Hide
       </Button>
     );
   } else {
     privateKeyButton = (
-      <Button key="hide" onClick={() => setPK(signer.privateKey)}>
-        <KeyOutlined /> Save Access
+      <Button key="hide" onClick={() => setPK(signer.privateKey)} icon={<KeyOutlined />}>
+        Save Access
       </Button>
     );
   }

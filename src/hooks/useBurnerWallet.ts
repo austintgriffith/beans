@@ -1,11 +1,11 @@
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useBurnerSigner } from "eth-hooks";
-import { useState, useEffect } from "react";
 
-export const useBurnerWallet = (provider: ethers.providers.JsonRpcProvider): ethers.Signer | undefined => {
-  const [signer, setSigner] = useState<ethers.Signer>();
-
+export const useBurnerWallet = (provider?: ethers.providers.JsonRpcProvider): ethers.Wallet | undefined => {
   const { signer: burnerSigner, loadOrGenerateBurner } = useBurnerSigner(provider);
+
+  const [signer, setSigner] = useState<ethers.Wallet>();
 
   useEffect(() => {
     if (!signer && provider) loadOrGenerateBurner();
@@ -21,7 +21,7 @@ export const useBurnerWallet = (provider: ethers.providers.JsonRpcProvider): eth
           console.warn("stored PK is invalid, using new burner wallet");
         }
       }
-      return burnerSigner;
+      return burnerSigner as ethers.Wallet;
     };
     setSigner(getSigner());
   }, [burnerSigner]);

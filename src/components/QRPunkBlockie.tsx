@@ -1,13 +1,11 @@
 import React, { useMemo } from "react";
-import { QRCodeSVG as QR } from "qrcode.react";
-import { message } from "antd";
+import { QRCode, message } from "antd";
 
-const hardcodedSizeForNow = 320;
+const QR_SIZE = 320;
 
 interface QRPunkBlockieProps {
   address: string;
   scale?: string;
-  withQr?: boolean;
   showAddress?: boolean;
 }
 
@@ -25,8 +23,8 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
         position: "relative",
         transformOrigin: "50% 50%",
         transform: "scale(" + (props.scale ? props.scale : "1") + ")",
-        width: hardcodedSizeForNow,
-        height: hardcodedSizeForNow,
+        width: QR_SIZE,
+        height: QR_SIZE,
       }}
       onClick={() => {
         const el = document.createElement("textarea");
@@ -43,27 +41,16 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
         );
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: hardcodedSizeForNow / 2 - 46,
-          top: hardcodedSizeForNow / 2 - 46,
-          zIndex: 100,
-        }}
-      >
-        <img alt="logo" src="./$ECO_square.png" style={{ width: 92, height: 92 }} />
-      </div>
-
-      {props.withQr ? (
-        <QR
-          level="H"
-          style={{ opacity: qrValue ? 1 : 0.0, transition: ".3s ease opacity" }}
+      <div style={{ opacity: qrValue ? 1 : 0, transition: ".3s ease opacity" }}>
+        <QRCode
           value={qrValue}
-          includeMargin={false}
-          size={hardcodedSizeForNow}
+          size={QR_SIZE}
+          iconSize={72}
+          errorLevel="H"
+          icon="./$ECO_square.png"
           imageSettings={{ width: 105, height: 105, excavate: true, src: "" }}
         />
-      ) : null}
+      </div>
 
       {props.showAddress ? (
         <div

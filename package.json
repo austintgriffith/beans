@@ -19,7 +19,6 @@
     "eth-hooks": "^4.6.2",
     "ethers": "^5.7.2",
     "graphql": "^15.3.0",
-    "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-reader": "^2.2.1",

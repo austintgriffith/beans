@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Input } from "antd";
+import { ethers } from "ethers";
 
 export default function WalletImport({ setShowImport }) {
+  const [username, setUsername] = useState("");
   const [importPrivatekey, setImportPrivatekey] = useState();
 
   const logIn = () => {
@@ -18,6 +20,12 @@ export default function WalletImport({ setShowImport }) {
     }
   };
 
+  useEffect(() => {
+    if (username && ethers.utils.isHexString(username) && username.length === 66) {
+      setImportPrivatekey(username);
+    }
+  }, [username]);
+
   return (
     <div>
       <div style={{ marginTop: 16, width: 420 }}>
@@ -29,15 +37,24 @@ export default function WalletImport({ setShowImport }) {
 
       <br />
 
-      <Input size="large" placeholder="Use your saved passwords" name="username" autocomplete="username" />
-      <Input.Password
-        size="large"
-        placeholder="0x..."
-        autocomplete="current-password"
-        style={{ display: "none" }}
-        value={importPrivatekey}
-        onChange={e => setImportPrivatekey(e.target.value)}
-      />
+      <form>
+        <Input
+          size="large"
+          placeholder="Use your saved passwords"
+          name="username"
+          autocomplete="username"
+          onChange={e => setUsername(e.target.value)}
+        />
+        <Input.Password
+          size="small"
+          style={{ display: "none" }}
+          placeholder="0x..."
+          name="password"
+          autocomplete="current-password"
+          value={importPrivatekey}
+          onChange={e => setImportPrivatekey(e.target.value)}
+        />
+      </form>
 
       <hr />
 
