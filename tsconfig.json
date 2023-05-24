@@ -14,9 +14,18 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "baseUrl": "./src",
     "paths": {
-      "~~": ["./src/"],
-      "~~/*": ["./src/*"]
+      "@assets/*": ["assets/*"],
+      "@components/*": ["components/*"],
+      "@contexts/*": ["contexts/*"],
+      "@constants": ["constants"],
+      "@helpers/*": ["helpers/*"],
+      "@helpers": ["helpers/index"],
+      "@hooks/*": ["hooks/*"],
+      "@hooks": ["hooks/index"],
+      "@themes/*": ["themes/*"],
+      "@views/*": ["views/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

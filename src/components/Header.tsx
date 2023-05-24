@@ -2,11 +2,11 @@ import React from "react";
 import { Col, Row } from "antd";
 import { Link, useLocation } from "react-router-dom";
 
-import { ReactComponent as EcoLogo } from "../assets/images/eco-logo.svg";
+import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 
 import "./Header.css";
 
-const Item = ({ to, children }) => {
+const Item: React.FC<React.PropsWithChildren<{ to: string }>> = ({ to, children }) => {
   const location = useLocation();
   const selected = to === location.pathname;
 
@@ -20,7 +20,7 @@ const Item = ({ to, children }) => {
   );
 };
 
-export default function Header({ ...props }) {
+export const Header: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <Row
       style={{
@@ -47,7 +47,7 @@ export default function Header({ ...props }) {
           <Item to="/about">About</Item>
         </Row>
       </Col>
-      <Col flex="40px">{props.children}</Col>
+      <Col flex="40px">{children}</Col>
     </Row>
   );
-}
+};

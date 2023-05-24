@@ -4,7 +4,7 @@ export const RPC_POLL_TIME = 30000;
 
 type Network = "localhost" | "mainnet" | "goerli" | "polygon" | "mumbai" | "optimism" | "goerli-optimism";
 
-interface INetwork {
+export interface INetwork {
   name: string;
   color: string;
   rpcUrl: string;

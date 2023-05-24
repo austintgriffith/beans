@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { Skeleton, Typography } from "antd";
 import { useResolveEnsAddress } from "eth-hooks/dapps";
 
-import { getNetwork } from "../constants";
+import { getNetwork } from "@constants";
 
 const { Text } = Typography;
 

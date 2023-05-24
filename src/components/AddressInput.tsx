@@ -1,15 +1,25 @@
 import React, { useCallback, useState } from "react";
 import { ethers } from "ethers";
-import { Input } from "antd";
+import { Input, InputProps } from "antd";
+import QrReader from "react-qr-reader";
 import { QrcodeOutlined } from "@ant-design/icons";
 import { useResolveEnsAddress } from "eth-hooks/dapps";
-import QrReader from "react-qr-reader";
 
 const isENS = (address = "") => address.endsWith(".eth") || address.endsWith(".xyz");
 
 const provider = new ethers.providers.InfuraProvider("mainnet", process.env.REACT_APP_INFURA_ID);
 
-export default function AddressInput(props) {
+interface AddressInputProps {
+  value: string;
+
+  disabled?: InputProps["disabled"];
+  placeholder?: InputProps["placeholder"];
+  onChange?: (value: string) => void;
+
+  hoistScanner?: (func: (show: boolean) => void) => void;
+}
+
+export const AddressInput: React.FC<AddressInputProps> = props => {
   const { onChange } = props;
   const [value, setValue] = useState(props.value);
   const [scan, setScan] = useState(false);
@@ -18,7 +28,7 @@ export default function AddressInput(props) {
   const [ens] = useResolveEnsAddress(provider, currentValue);
 
   const updateAddress = useCallback(
-    async newValue => {
+    async (newValue: string) => {
       if (typeof newValue !== "undefined") {
         let address = newValue;
         if (isENS(address)) {
@@ -27,7 +37,6 @@ export default function AddressInput(props) {
             if (possibleAddress) {
               address = possibleAddress;
             }
-            // eslint-disable-next-line no-empty
           } catch (e) {}
         }
         setValue(address);
@@ -88,7 +97,6 @@ export default function AddressInput(props) {
         name="0xAddress"
         autoComplete="off"
         disabled={props.disabled}
-        autoFocus={props.autoFocus}
         placeholder={props.placeholder ? props.placeholder : "address"}
         style={{ fontSize: 20, fontFamily: "'Rubik', sans-serif" }}
         value={ethers.utils.isAddress(currentValue) && !isENS(currentValue) && isENS(ens) ? ens : currentValue}
@@ -106,4 +114,6 @@ export default function AddressInput(props) {
       />
     </>
   );
-}
+};
+
+export default AddressInput;

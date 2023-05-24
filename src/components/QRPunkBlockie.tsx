@@ -4,17 +4,18 @@ import { QRCode, message } from "antd";
 const QR_SIZE = 320;
 
 interface QRPunkBlockieProps {
-  address: string;
   scale?: string;
+  address?: string;
   showAddress?: boolean;
 }
 
-export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
+export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = ({ address, showAddress, scale }) => {
   const qrValue = useMemo(() => {
+    if (!address) return "";
     const url = new URL("", window.location.origin);
-    url.searchParams.set("addr", props.address);
-    return props.address ? url.toString() : "";
-  }, [props.address]);
+    url.searchParams.set("addr", address);
+    return url.toString();
+  }, [address]);
 
   return (
     <div
@@ -22,13 +23,13 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
         margin: "auto",
         position: "relative",
         transformOrigin: "50% 50%",
-        transform: "scale(" + (props.scale ? props.scale : "1") + ")",
+        transform: "scale(" + (scale ? scale : "1") + ")",
         width: QR_SIZE,
         height: QR_SIZE,
       }}
       onClick={() => {
         const el = document.createElement("textarea");
-        el.value = props.address;
+        el.value = address!;
         document.body.appendChild(el);
         el.select();
         document.execCommand("copy");
@@ -52,7 +53,7 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
         />
       </div>
 
-      {props.showAddress ? (
+      {showAddress ? (
         <div
           style={{
             fontWeight: "bolder",
@@ -61,7 +62,7 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = props => {
             fontSize: 14.8,
           }}
         >
-          {props.address}
+          {address}
         </div>
       ) : null}
     </div>

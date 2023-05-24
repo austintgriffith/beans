@@ -1,21 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ethers } from "ethers";
-import { Button, FloatButton, Input, Skeleton, Space, Typography } from "antd";
 import { useContractReader } from "eth-hooks";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Button, FloatButton, Input, InputProps, Skeleton, Space, Typography } from "antd";
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 
-import { formatAmount, round } from "../helpers";
-import AddressInput from "../components/AddressInput";
-import QRPunkBlockie from "../components/QRPunkBlockie";
-import { useStackup } from "../contexts/StackupContext";
-import { ReactComponent as EcoLogo } from "../assets/images/eco-logo.svg";
-import { useEcoPrice } from "../hooks";
-import { ERC20_ABI } from "../assets/abis/ERC20";
+import { useEcoPrice } from "@hooks";
+import { ERC20_ABI } from "@assets/abis";
+import { formatAmount, round } from "@helpers";
+import { INetwork, ECO_TOKEN_ADDRESS } from "@constants";
 
-const REACT_APP_ECO_TOKEN_ADDRESS = process.env.REACT_APP_ECO_TOKEN_ADDRESS;
+import AddressInput from "@components/AddressInput";
+import QRPunkBlockie from "@components/QRPunkBlockie";
+import { useStackup } from "@contexts/StackupContext";
 
-function getTotal(amount) {
+import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
+
+function getTotal(amount: string) {
   try {
     return formatAmount(amount).abs();
   } catch (e) {
@@ -23,14 +24,19 @@ function getTotal(amount) {
   }
 }
 
-let scanner;
+let scanner: (show: boolean) => void;
 
-function Home({ network, provider }) {
+interface HomeProps {
+  network: INetwork;
+  provider: ethers.providers.JsonRpcProvider;
+}
+
+const Home: React.FC<HomeProps> = ({ network, provider }) => {
   const stackup = useStackup();
   const navigate = useNavigate();
 
-  const [amount, setAmount] = useState();
-  const [toAddress, setToAddress] = useState();
+  const [amount, setAmount] = useState("");
+  const [toAddress, setToAddress] = useState("");
   const [lastTx, setLastTx] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -60,13 +66,13 @@ function Home({ network, provider }) {
     }
   };
 
-  const handleKey = event => {
+  const handleKey: InputProps["onKeyUp"] = event => {
     if (event.key === "Enter") doSend();
   };
 
   const address = stackup.simpleAccount?.getSender();
-  const eco = useMemo(() => new ethers.Contract(REACT_APP_ECO_TOKEN_ADDRESS, ERC20_ABI, provider), [provider]);
-  const [balance] = useContractReader(eco, eco.balanceOf, [address], 4000);
+  const eco = useMemo(() => new ethers.Contract(ECO_TOKEN_ADDRESS, ERC20_ABI, provider), [provider]);
+  const [balance] = useContractReader(eco, eco.balanceOf, [address], {});
 
   const total = getTotal(amount);
   const tokensFee = ecoPrice && (Number(stackup.expectedGasFee.toBigInt()) / 1e18) * (1 / ecoPrice);
@@ -187,6 +193,6 @@ function Home({ network, provider }) {
       />
     </Space>
   );
-}
+};
 
 export default Home;

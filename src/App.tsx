@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { About, Home } from "./views";
-import { getNetwork } from "./constants";
+import { getNetwork } from "./constants/network";
 import { Account, Footer, Header } from "./components";
 import { useBurnerWallet, useStaticJsonRPC } from "./hooks";
 import { StackupProvider } from "./contexts/StackupContext";

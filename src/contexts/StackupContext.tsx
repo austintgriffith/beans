@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useQuery } from "react-query";
 import { Client, Presets } from "userop";
 import { SimpleAccount } from "userop/dist/preset/builder";
 
-import { ERC20_ABI } from "../assets/abis/ERC20";
-import { useQuery } from "react-query";
+import { ERC20_ABI } from "@assets/abis";
+import { ECO_TOKEN_ADDRESS, STACKUP_API_KEY, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
 
 interface IStackupProvider {
   client?: Client;
@@ -23,21 +24,15 @@ const StackupContext = React.createContext<IStackupProvider>({
 
 export const useStackup = () => React.useContext<IStackupProvider>(StackupContext);
 
-const STACKUP_API_KEY = "3bf77b3f42c7032f4df8cf35b8bd0e060aaf657d78f4fd99313d4869a31f53c5";
-const VERIFYING_PAYMASTER_ADDRESS = "0xE93ECa6595fe94091DC1af46aaC2A8b5D7990770";
-
-const ECO_TOKEN = ethers.utils.getAddress(process.env.REACT_APP_ECO_TOKEN_ADDRESS!);
-
 const config = {
   rpcUrl: `https://api.stackup.sh/v1/node/${STACKUP_API_KEY}`,
-  signingKey: new ethers.Wallet(ethers.utils.randomBytes(32)).privateKey,
   entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
   simpleAccountFactory: "0x9406Cc6185a346906296840746125a0E44976454",
   paymaster: {
     rpcUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_API_KEY}`,
     context: {
       type: "erc20token",
-      token: ECO_TOKEN,
+      token: ECO_TOKEN_ADDRESS,
     },
   },
 };
@@ -96,7 +91,7 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
   const buildOps = async (to: string, amount: ethers.BigNumber) => {
     if (!simpleAccount) return;
 
-    const erc20 = new ethers.Contract(ECO_TOKEN, ERC20_ABI, provider);
+    const erc20 = new ethers.Contract(ECO_TOKEN_ADDRESS, ERC20_ABI, provider);
     const data = erc20.interface.encodeFunctionData("transfer", [to, amount]);
 
     const hasBeenDeployed = await hasWalletBeenDeployed((client as any).provider, simpleAccount.getSender());
