@@ -8,7 +8,7 @@ import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 import { useEcoPrice } from "@hooks";
 import { ERC20_ABI } from "@assets/abis";
 import { formatAmount, round } from "@helpers";
-import { INetwork, ECO_TOKEN_ADDRESS } from "@constants";
+import { ECO_TOKEN_ADDRESS, INetwork } from "@constants";
 
 import AddressInput from "@components/AddressInput";
 import QRPunkBlockie from "@components/QRPunkBlockie";
@@ -31,7 +31,7 @@ interface HomeProps {
   provider: ethers.providers.JsonRpcProvider;
 }
 
-const Home: React.FC<HomeProps> = ({ network, provider }) => {
+export const Home: React.FC<HomeProps> = ({ network, provider }) => {
   const stackup = useStackup();
   const navigate = useNavigate();
 
@@ -81,63 +81,35 @@ const Home: React.FC<HomeProps> = ({ network, provider }) => {
 
   return (
     <Space direction="vertical" size="large" style={{ marginTop: 24 }}>
-      <Space direction="vertical">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "auto",
-            textAlign: "right",
-            gap: 8,
-            width: 500,
-            fontFamily: "'Rubik', sans-serif",
-            fontSize: 50,
-            letterSpacing: -0.5,
-          }}
-        >
-          <EcoLogo style={{ width: 28, height: 28 }} />
+      <Space.Compact direction="horizontal" style={{ gap: 8, alignItems: "center" }}>
+        <EcoLogo style={{ width: 28, height: 28 }} />
+        <Typography.Title level={2} style={{ margin: 0 }}>
           {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 3) : "---"}
-        </div>
+        </Typography.Title>
+      </Space.Compact>
 
-        <div
-          style={{
-            margin: "auto",
-            position: "relative",
-            backgroundColor: "#ffffff",
-            padding: 8,
-            width: 400,
-          }}
-        >
-          <QRPunkBlockie address={address} />
-        </div>
-      </Space>
-      <div style={{ margin: "auto", width: 300 }}>
-        <AddressInput
-          placeholder="to address"
-          value={toAddress}
-          onChange={setToAddress}
-          hoistScanner={toggle => (scanner = toggle)}
-        />
-      </div>
-      <div style={{ margin: "auto", width: 300 }}>
-        <Input
-          type="number"
-          min="0"
-          pattern="\d*"
-          placeholder="amount to send"
-          value={amount}
-          onKeyPress={handleKey}
-          onChange={e => setAmount(e.target.value)}
-          prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
-          style={{
-            fontSize: 20,
-            width: 300,
-            fontFamily: "'Rubik', sans-serif",
-          }}
-        />
-      </div>
+      <QRPunkBlockie address={address} />
+
+      <AddressInput
+        placeholder="to address"
+        value={toAddress}
+        onChange={setToAddress}
+        hoistScanner={toggle => (scanner = toggle)}
+      />
+      <Input
+        type="number"
+        min="0"
+        pattern="\d*"
+        placeholder="amount to send"
+        value={amount}
+        onKeyPress={handleKey}
+        onChange={e => setAmount(e.target.value)}
+        prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
+        style={{
+          fontSize: 20,
+          fontFamily: "'Rubik', sans-serif",
+        }}
+      />
       <Typography.Text>
         <b>Expected Fee: </b>
         {tokensFee ? (
@@ -153,11 +125,11 @@ const Home: React.FC<HomeProps> = ({ network, provider }) => {
       ) : null}
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
           gap: 8,
           margin: "auto",
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "column",
         }}
       >
         <Button
@@ -182,7 +154,6 @@ const Home: React.FC<HomeProps> = ({ network, provider }) => {
             </a>
           </span>
         ) : null}
-        {/*{gasless.error ? <span style={{ color: "rgb(200,0,0)" }}>{gasless.error}</span> : null}*/}
       </div>
       <FloatButton
         type="primary"
@@ -194,5 +165,3 @@ const Home: React.FC<HomeProps> = ({ network, provider }) => {
     </Space>
   );
 };
-
-export default Home;

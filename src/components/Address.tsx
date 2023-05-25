@@ -14,17 +14,15 @@ const blockExplorerLink = (address: string) => {
 
 interface AddressProps {
   address: string;
-  provider: ethers.providers.JsonRpcProvider;
   minimized?: boolean;
   size?: "short" | "normal" | "long";
   fontSize?: CSSProperties["fontSize"];
   onChange?: (value: string) => void;
+  provider: ethers.providers.JsonRpcProvider;
 }
 
-export default function Address(props: AddressProps) {
-  const address = props.address;
-
-  const [ens] = useResolveEnsAddress(props.provider, address);
+export const Address: React.FC<AddressProps> = ({ address, provider, minimized, onChange, fontSize, size }) => {
+  const [ens] = useResolveEnsAddress(provider, address);
 
   const ensSplit = ens && ens.split(".");
   const validEnsCheck = ensSplit && ensSplit[ensSplit.length - 1] === "eth";
@@ -34,9 +32,9 @@ export default function Address(props: AddressProps) {
   let displayAddress = address?.substr(0, 5) + "..." + address?.substr(-4);
   if (validEnsCheck) {
     displayAddress = ens!;
-  } else if (props.size === "short") {
+  } else if (size === "short") {
     displayAddress += "..." + address.substr(-4);
-  } else if (props.size === "long") {
+  } else if (size === "long") {
     displayAddress = address;
   }
 
@@ -48,7 +46,7 @@ export default function Address(props: AddressProps) {
     );
   }
 
-  if (props.minimized) {
+  if (minimized) {
     return (
       <span style={{ verticalAlign: "middle" }}>
         <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
@@ -64,10 +62,10 @@ export default function Address(props: AddressProps) {
         style={{
           paddingLeft: 5,
           verticalAlign: "middle",
-          fontSize: props.fontSize ? props.fontSize : 28,
+          fontSize: fontSize ? fontSize : 28,
         }}
       >
-        <Text editable={props.onChange ? { onChange: props.onChange } : undefined} copyable={{ text: address }}>
+        <Text editable={onChange ? { onChange: onChange } : undefined} copyable={{ text: address }}>
           <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
             {displayAddress}
           </a>
@@ -75,4 +73,4 @@ export default function Address(props: AddressProps) {
       </span>
     </span>
   );
-}
+};

@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Button, Input } from "antd";
 import { ethers } from "ethers";
+import { Button, Input } from "antd";
 
-export default function WalletImport({ setShowImport }) {
+interface WalletImportProps {
+  setShowImport: (show: boolean) => void;
+}
+
+export const WalletImport: React.FC<WalletImportProps> = ({ setShowImport }) => {
   const [username, setUsername] = useState("");
-  const [importPrivatekey, setImportPrivatekey] = useState();
+  const [importPrivatekey, setImportPrivatekey] = useState("");
 
   const logIn = () => {
     const currentPrivateKey = window.localStorage.getItem("metaPrivateKey");
@@ -40,30 +44,24 @@ export default function WalletImport({ setShowImport }) {
       <form>
         <Input
           size="large"
-          placeholder="Use your saved passwords"
           name="username"
-          autocomplete="username"
+          placeholder="Use your saved passwords"
           onChange={e => setUsername(e.target.value)}
         />
         <Input.Password
           size="small"
-          style={{ display: "none" }}
-          placeholder="0x..."
           name="password"
-          autocomplete="current-password"
+          placeholder="0x..."
           value={importPrivatekey}
           onChange={e => setImportPrivatekey(e.target.value)}
+          style={{ display: "none" }}
         />
       </form>
 
       <hr />
 
       <div style={{ float: "right" }}>
-        <Button
-          style={{ marginTop: 16 }}
-          disabled={!importPrivatekey} //safety third!
-          onClick={logIn}
-        >
+        <Button onClick={logIn} disabled={!importPrivatekey} style={{ marginTop: 16 }}>
           Log In
         </Button>
       </div>
@@ -73,4 +71,4 @@ export default function WalletImport({ setShowImport }) {
       </Button>
     </div>
   );
-}
+};

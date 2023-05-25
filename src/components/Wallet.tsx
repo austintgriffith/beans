@@ -1,18 +1,19 @@
-import React, { useState } from "react";
+import React, { CSSProperties, useState } from "react";
 import { ethers } from "ethers";
 import { Button, Modal, Spin, Tooltip } from "antd";
 import { KeyOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
 
-import Address from "./Address";
-import WalletImport from "./WalletImport";
+import { Address } from "./Address";
+import { WalletImport } from "./WalletImport";
 
 interface WalletProps {
   address: string;
-  padding: string;
-  color: string;
-  size: number;
-  provider: ethers.providers.JsonRpcProvider;
   signer: ethers.Wallet;
+  provider: ethers.providers.JsonRpcProvider;
+
+  size?: CSSProperties["fontSize"];
+  color?: CSSProperties["color"];
+  padding?: CSSProperties["padding"];
 }
 
 export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color, provider, size }) => {
@@ -27,9 +28,9 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
         style={{
           cursor: "pointer",
           verticalAlign: "middle",
-          color: color ? color : "",
-          fontSize: size ? size : 28,
-          padding: padding ? padding : 7,
+          color: color,
+          padding: padding ?? 7,
+          fontSize: size ?? 28,
         }}
       />
     </Tooltip>

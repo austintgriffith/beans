@@ -6,7 +6,7 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
-    "lint": "eslint ./src/**/*.{js,jsx} --ignore-path ./.eslintignore --max-warnings=0",
+    "lint": "eslint ./src/**/*.{ts,tsx} --ignore-path ./.eslintignore --max-warnings=0",
     "prettier": "npx prettier --write . '!(node_module|build)/**/*'"
   },
   "dependencies": {
