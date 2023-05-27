@@ -1,7 +1,8 @@
-import React, { CSSProperties, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { Button, Modal, Spin, Tooltip } from "antd";
 import { KeyOutlined, SaveOutlined, SettingOutlined } from "@ant-design/icons";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Address } from "./Address";
 import { WalletImport } from "./WalletImport";
@@ -20,6 +21,15 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
   const [pk, setPK] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
+
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const password = searchParams.get("password");
+    if (password) {
+      navigate("/");
+    }
+  }, [navigate, searchParams]);
 
   const providerSend = provider ? (
     <Tooltip title="Wallet">
