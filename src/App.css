@@ -2,11 +2,6 @@ body {
   margin: 0;
 }
 
-.App {
-  text-align: center;
-  padding-left: calc(100vw - 100%);
-}
-
 @font-face {
   font-family: "rubik";
   src: url("./fonts/Rubik-Regular.ttf") format("truetype");

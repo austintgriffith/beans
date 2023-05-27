@@ -1,25 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { useQuery } from "react-query";
-import { Client, Presets } from "userop";
+import { Client, Presets, UserOperationMiddlewareFn } from "userop";
 import { SimpleAccount } from "userop/dist/preset/builder";
 
 import { ERC20_ABI } from "@assets/abis";
-import { ECO_TOKEN_ADDRESS, STACKUP_API_KEY, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
+import { ECO_TOKEN_ADDRESS, STACKUP_API_KEY, USDC_TOKEN_ADDRESS, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
 
 interface IStackupProvider {
+  address: string;
   client?: Client;
-  simpleAccount?: SimpleAccount;
+  signer: ethers.Signer;
+  simpleAccount: SimpleAccount;
+  provider: ethers.providers.Provider;
   expectedGasFee: ethers.BigNumber;
 
   transfer(to: string, amount: ethers.BigNumber): Promise<string>;
 }
 
 const StackupContext = React.createContext<IStackupProvider>({
+  signer: {} as ethers.Signer,
+  provider: {} as ethers.providers.Provider,
+  simpleAccount: {} as SimpleAccount,
   expectedGasFee: ethers.constants.Zero,
-  async transfer() {
-    return "";
-  },
+  address: ethers.constants.AddressZero,
+  transfer: () => Promise.reject(),
 });
 
 export const useStackup = () => React.useContext<IStackupProvider>(StackupContext);
@@ -30,12 +35,14 @@ const config = {
   simpleAccountFactory: "0x9406Cc6185a346906296840746125a0E44976454",
   paymaster: {
     rpcUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_API_KEY}`,
-    context: {
-      type: "erc20token",
-      token: ECO_TOKEN_ADDRESS,
-    },
+    contextEco: { type: "erc20token", token: ECO_TOKEN_ADDRESS },
+    contextUsdc: { type: "erc20token", token: USDC_TOKEN_ADDRESS },
   },
 };
+
+const ERC20_TRANSFER_GAS = 91_000;
+const VALIDATION_GAS = 100_000;
+const INIT_CODE_GAS = 385_266;
 
 interface StackupProviderProps {
   provider: ethers.providers.Provider;
@@ -52,11 +59,24 @@ const hasWalletBeenDeployed = async (provider: any, address: string) => {
   return false;
 };
 
-const paymaster = Presets.Middleware.verifyingPaymaster(config.paymaster.rpcUrl, config.paymaster.context);
+export const VERIFYING_PAYMASTER_ECO = Presets.Middleware.verifyingPaymaster(
+  config.paymaster.rpcUrl,
+  config.paymaster.contextEco,
+);
+export const VERIFYING_PAYMASTER_USDC = Presets.Middleware.verifyingPaymaster(
+  config.paymaster.rpcUrl,
+  config.paymaster.contextUsdc,
+);
 
-const ERC20_TRANSFER_GAS = 91_000;
-const VALIDATION_GAS = 100_000;
-const INIT_CODE_GAS = 385_266;
+export const getSimpleAccount = (signer: ethers.Signer, paymaster?: UserOperationMiddlewareFn) => {
+  return Presets.Builder.SimpleAccount.init(
+    signer,
+    config.rpcUrl,
+    config.entryPoint,
+    config.simpleAccountFactory,
+    paymaster,
+  );
+};
 
 export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderProps>> = ({
   signer,
@@ -70,16 +90,14 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
     (async () => {
       // Init Simple Account
       try {
-        const simpleAccount = await Presets.Builder.SimpleAccount.init(
-          signer,
-          config.rpcUrl,
-          config.entryPoint,
-          config.simpleAccountFactory,
-          paymaster,
-        );
+        const simpleAccount = await getSimpleAccount(signer, VERIFYING_PAYMASTER_ECO);
         setSimpleAccount(simpleAccount);
       } catch (err) {}
+    })();
+  }, [signer]);
 
+  useEffect(() => {
+    (async () => {
       // Init Client
       try {
         const client = await Client.init(config.rpcUrl, config.entryPoint);
@@ -140,12 +158,19 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
     { enabled: !!simpleAccount && !!client, initialData: ethers.constants.Zero },
   );
 
+  const address = simpleAccount?.getSender();
+
+  if (!address || !simpleAccount) return null;
+
   return (
     <StackupContext.Provider
       value={{
-        simpleAccount,
+        signer,
         client,
+        address,
+        provider,
         transfer,
+        simpleAccount,
         expectedGasFee: expectedGasFee!,
       }}
     >

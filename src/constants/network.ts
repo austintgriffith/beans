@@ -64,10 +64,8 @@ export const NETWORKS: Record<Network, INetwork> = {
   },
 };
 
-export function getNetwork() {
-  return NETWORKS[process.env.REACT_APP_NETWORK as keyof typeof NETWORKS];
-}
+export const NETWORK = NETWORKS[process.env.REACT_APP_NETWORK as keyof typeof NETWORKS];
 
-if (getNetwork() === undefined) {
+if (NETWORK === undefined) {
   throw new Error("Network not found, please change the `REACT_APP_NETWORK` ENV or add the network to the list");
 }

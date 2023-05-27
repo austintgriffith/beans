@@ -12,7 +12,7 @@ const root = createRoot(document.getElementById("root")!);
 root.render(
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <ConfigProvider theme={{ token: { colorPrimary: "#021540", colorIcon: "#FFFFFF" } }}>
+      <ConfigProvider theme={{ token: { colorPrimary: "#021540", colorIcon: "#FFFFFF", colorLink: "#06153c" } }}>
         <App />
       </ConfigProvider>
     </QueryClientProvider>

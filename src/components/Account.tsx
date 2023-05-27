@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ethers } from "ethers";
 
 import Wallet from "./Wallet";
+import { useStackup } from "@contexts/StackupContext";
 
 interface AccountProps {
   signer: ethers.Wallet;
@@ -9,15 +10,6 @@ interface AccountProps {
 }
 
 export const Account: React.FC<AccountProps> = ({ signer, provider }) => {
-  const [address, setAddress] = useState<string>();
-
-  useEffect(() => {
-    signer
-      ?.getAddress()
-      .then(address => address && setAddress(address))
-      .catch(console.error);
-  }, [signer]);
-
-  if (!address) return null;
+  const { address } = useStackup();
   return <Wallet padding="0px" color="#06153c" address={address} signer={signer} provider={provider} size={24} />;
 };

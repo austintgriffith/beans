@@ -45,6 +45,7 @@ export const Header: React.FC<React.PropsWithChildren> = ({ children }) => {
         >
           <Item to="/">Home</Item>
           <Item to="/about">About</Item>
+          {/*<Item to="/swap">Swap</Item>*/}
         </Row>
       </Col>
       <Col flex="40px">{children}</Col>

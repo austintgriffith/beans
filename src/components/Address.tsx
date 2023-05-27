@@ -1,27 +1,22 @@
-import React, { CSSProperties } from "react";
+import React from "react";
 import { ethers } from "ethers";
 import { Skeleton, Typography } from "antd";
+import { LinkProps } from "antd/es/typography/Link";
 import { useResolveEnsAddress } from "eth-hooks/dapps";
 
-import { getNetwork } from "@constants";
+import { blockExplorerLink } from "@helpers";
 
-const { Text } = Typography;
+const { Link } = Typography;
 
-const blockExplorerLink = (address: string) => {
-  const { blockExplorer } = getNetwork();
-  return new URL(`address/${address}`, blockExplorer).toString();
-};
-
-interface AddressProps {
+interface AddressProps extends LinkProps {
   address: string;
-  minimized?: boolean;
-  size?: "short" | "normal" | "long";
-  fontSize?: CSSProperties["fontSize"];
-  onChange?: (value: string) => void;
   provider: ethers.providers.JsonRpcProvider;
+  copyable?: boolean;
+
+  size?: "normal" | "long";
 }
 
-export const Address: React.FC<AddressProps> = ({ address, provider, minimized, onChange, fontSize, size }) => {
+export const Address: React.FC<AddressProps> = ({ address, provider, size, copyable, ...props }) => {
   const [ens] = useResolveEnsAddress(provider, address);
 
   const ensSplit = ens && ens.split(".");
@@ -32,8 +27,6 @@ export const Address: React.FC<AddressProps> = ({ address, provider, minimized, 
   let displayAddress = address?.substr(0, 5) + "..." + address?.substr(-4);
   if (validEnsCheck) {
     displayAddress = ens!;
-  } else if (size === "short") {
-    displayAddress += "..." + address.substr(-4);
   } else if (size === "long") {
     displayAddress = address;
   }
@@ -46,31 +39,16 @@ export const Address: React.FC<AddressProps> = ({ address, provider, minimized, 
     );
   }
 
-  if (minimized) {
-    return (
-      <span style={{ verticalAlign: "middle" }}>
-        <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
-          {displayAddress}
-        </a>
-      </span>
-    );
-  }
-
   return (
-    <span>
-      <span
-        style={{
-          paddingLeft: 5,
-          verticalAlign: "middle",
-          fontSize: fontSize ? fontSize : 28,
-        }}
-      >
-        <Text editable={onChange ? { onChange: onChange } : undefined} copyable={{ text: address }}>
-          <a style={{ color: "#06153c" }} target="_blank" href={etherscanLink} rel="noopener noreferrer">
-            {displayAddress}
-          </a>
-        </Text>
-      </span>
-    </span>
+    <Link
+      color="primary"
+      target="_blank"
+      rel="noopener noreferrer"
+      href={etherscanLink}
+      copyable={copyable ? { text: address } : undefined}
+      {...props}
+    >
+      {displayAddress}
+    </Link>
   );
 };

@@ -2,23 +2,21 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ethers } from "ethers";
 import { useContractReader } from "eth-hooks";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Button, FloatButton, Input, InputProps, Skeleton, Space, Typography } from "antd";
+import { Button, FloatButton, Input, InputProps, notification, Skeleton, Space, Typography } from "antd";
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 
-import { useEcoPrice } from "@hooks";
+import { useTokenPrice } from "@hooks";
 import { ERC20_ABI } from "@assets/abis";
-import { formatAmount, round } from "@helpers";
-import { ECO_TOKEN_ADDRESS, INetwork } from "@constants";
-
-import AddressInput from "@components/AddressInput";
-import QRPunkBlockie from "@components/QRPunkBlockie";
+import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
+import { ECO_TOKEN_ADDRESS } from "@constants";
+import { Address, AddressInput, QRPunkBlockie } from "@components";
 import { useStackup } from "@contexts/StackupContext";
 
 import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 
 function getTotal(amount: string) {
   try {
-    return formatAmount(amount).abs();
+    return convertAmount(amount).abs();
   } catch (e) {
     return ethers.constants.Zero;
   }
@@ -27,20 +25,20 @@ function getTotal(amount: string) {
 let scanner: (show: boolean) => void;
 
 interface HomeProps {
-  network: INetwork;
   provider: ethers.providers.JsonRpcProvider;
 }
 
-export const Home: React.FC<HomeProps> = ({ network, provider }) => {
-  const stackup = useStackup();
+export const Home: React.FC<HomeProps> = ({ provider }) => {
+  const { address, transfer, expectedGasFee } = useStackup();
   const navigate = useNavigate();
 
   const [amount, setAmount] = useState("");
   const [toAddress, setToAddress] = useState("");
-  const [lastTx, setLastTx] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { data: ecoPrice } = useEcoPrice();
+  const [notificationApi, notificationElemt] = notification.useNotification();
+
+  const { data: ecoPrice = 0 } = useTokenPrice("eco");
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -53,14 +51,32 @@ export const Home: React.FC<HomeProps> = ({ network, provider }) => {
 
   const doSend = async () => {
     setLoading(true);
-    setLastTx("");
-    const value = formatAmount(amount);
+    const value = convertAmount(amount);
     try {
-      const txHash = await stackup.transfer(toAddress, value);
+      const txHash = await transfer(toAddress, value);
+
+      notificationApi.success({
+        placement: "topRight",
+        message: "Transfer Executed!",
+        duration: 10000,
+        description: (
+          <>
+            You have sent <b>{formatTokenAmount(ethers.utils.formatUnits(value, 18), 3)} ECO</b> tokens to{" "}
+            <Address provider={provider} address={toAddress} style={{ fontWeight: "bold" }} />.<br />
+            <Typography.Link href={blockExplorerLink(txHash)} target="_blank">
+              See transaction.
+            </Typography.Link>
+          </>
+        ),
+      });
+
       setAmount("");
-      setLastTx(txHash);
     } catch (e) {
       console.log("[gasless:transfer]", e);
+      notificationApi.error({
+        placement: "topRight",
+        message: "Transfer failed",
+      });
     } finally {
       setLoading(false);
     }
@@ -70,21 +86,23 @@ export const Home: React.FC<HomeProps> = ({ network, provider }) => {
     if (event.key === "Enter") doSend();
   };
 
-  const address = stackup.simpleAccount?.getSender();
   const eco = useMemo(() => new ethers.Contract(ECO_TOKEN_ADDRESS, ERC20_ABI, provider), [provider]);
-  const [balance] = useContractReader(eco, eco.balanceOf, [address], {});
+  const [balance] = useContractReader(eco, eco.balanceOf, [address], {}, { blockNumberInterval: 1 });
 
   const total = getTotal(amount);
-  const tokensFee = ecoPrice && (Number(stackup.expectedGasFee.toBigInt()) / 1e18) * (1 / ecoPrice);
+  const tokensFee = ecoPrice && (Number(expectedGasFee.toBigInt()) / 1e18) * (1 / ecoPrice);
   const exceedsBalance = total.add(ethers.utils.parseEther(tokensFee.toString())).gt(balance || ethers.constants.Zero);
   const disabled = exceedsBalance || loading || !amount || !toAddress;
 
   return (
     <Space direction="vertical" size="large" style={{ marginTop: 24 }}>
-      <Space.Compact direction="horizontal" style={{ gap: 8, alignItems: "center" }}>
+      <Space.Compact
+        direction="horizontal"
+        style={{ gap: 8, width: "100%", alignItems: "center", justifyContent: "center" }}
+      >
         <EcoLogo style={{ width: 28, height: 28 }} />
         <Typography.Title level={2} style={{ margin: 0 }}>
-          {balance ? round(parseFloat(ethers.utils.formatEther(balance)), 3) : "---"}
+          {balance ? formatTokenAmount(parseFloat(ethers.utils.formatEther(balance)), 3) : "---"}
         </Typography.Title>
       </Space.Compact>
 
@@ -110,14 +128,16 @@ export const Home: React.FC<HomeProps> = ({ network, provider }) => {
           fontFamily: "'Rubik', sans-serif",
         }}
       />
-      <Typography.Text>
-        <b>Expected Fee: </b>
-        {tokensFee ? (
-          `~${round(tokensFee, 2)} ECO`
-        ) : (
-          <Skeleton.Input active size="small" style={{ width: 80, minWidth: 80 }} />
-        )}
-      </Typography.Text>
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>
+        <Typography.Text>
+          <b>Expected Fee: </b>
+          {tokensFee ? (
+            `~${formatTokenAmount(tokensFee, 2)} ECO`
+          ) : (
+            <Skeleton.Input active size="small" style={{ width: 80, minWidth: 80 }} />
+          )}
+        </Typography.Text>
+      </div>
       {exceedsBalance && amount ? (
         <div style={{ marginTop: 8 }}>
           <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
@@ -144,16 +164,7 @@ export const Home: React.FC<HomeProps> = ({ network, provider }) => {
           Send
         </Button>
 
-        {loading ? (
-          <span style={{ color: "#06153c" }}>Transferring tokens...</span>
-        ) : lastTx ? (
-          <span style={{ color: "rgb(0,200,0)" }}>
-            Gasless transfer executed -{" "}
-            <a target="_blank" rel="noreferrer" href={`${network.blockExplorer}/tx/${lastTx}`}>
-              transaction
-            </a>
-          </span>
-        ) : null}
+        {loading ? <span style={{ color: "#06153c" }}>Transferring tokens...</span> : null}
       </div>
       <FloatButton
         type="primary"
@@ -162,6 +173,7 @@ export const Home: React.FC<HomeProps> = ({ network, provider }) => {
         icon={<ScanOutlined />}
         style={{ transform: "scale(2)", right: 48 }}
       />
+      {notificationElemt}
     </Space>
   );
 };
