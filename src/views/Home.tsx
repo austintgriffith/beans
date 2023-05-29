@@ -6,13 +6,13 @@ import { Button, FloatButton, Input, InputProps, notification, Skeleton, Space, 
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 
 import { useTokenPrice } from "@hooks";
-import { ERC20_ABI } from "@assets/abis";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
 import { ECO_TOKEN_ADDRESS } from "@constants";
 import { Address, AddressInput, QRPunkBlockie } from "@components";
 import { useStackup } from "@contexts/StackupContext";
 
 import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
+import { ERC20__factory } from "@assets/contracts";
 
 function getTotal(amount: string) {
   try {
@@ -86,7 +86,7 @@ export const Home: React.FC<HomeProps> = ({ provider }) => {
     if (event.key === "Enter") doSend();
   };
 
-  const eco = useMemo(() => new ethers.Contract(ECO_TOKEN_ADDRESS, ERC20_ABI, provider), [provider]);
+  const eco = useMemo(() => ERC20__factory.connect(ECO_TOKEN_ADDRESS, provider), [provider]);
   const [balance] = useContractReader(eco, eco.balanceOf, [address], {}, { blockNumberInterval: 1 });
 
   const total = getTotal(amount);
@@ -98,12 +98,16 @@ export const Home: React.FC<HomeProps> = ({ provider }) => {
     <Space direction="vertical" size="large" style={{ marginTop: 24 }}>
       <Space.Compact
         direction="horizontal"
-        style={{ gap: 8, width: "100%", alignItems: "center", justifyContent: "center" }}
+        style={{ gap: 8, width: "100%", alignItems: "center", justifyContent: "center", minHeight: 38 }}
       >
         <EcoLogo style={{ width: 28, height: 28 }} />
-        <Typography.Title level={2} style={{ margin: 0 }}>
-          {balance ? formatTokenAmount(parseFloat(ethers.utils.formatEther(balance)), 3) : "---"}
-        </Typography.Title>
+        {balance ? (
+          <Typography.Title level={2} style={{ margin: 0 }}>
+            {formatTokenAmount(parseFloat(ethers.utils.formatEther(balance)), 3)}
+          </Typography.Title>
+        ) : (
+          <Skeleton.Input />
+        )}
       </Space.Compact>
 
       <QRPunkBlockie address={address} />

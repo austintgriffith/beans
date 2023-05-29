@@ -4,12 +4,12 @@ import { Alert, Button, notification, Space, Typography } from "antd";
 import { ArrowDownOutlined, SwapOutlined } from "@ant-design/icons";
 
 import { USDC_TOKEN_ADDRESS } from "@constants";
-import { ERC20_ABI } from "@assets/abis";
 import { useContractReader } from "eth-hooks";
 import { useStackup } from "@contexts/StackupContext";
 import { blockExplorerLink, convertTokenAmount, formatTokenAmount } from "@helpers";
 import { useUniPool } from "@hooks/useUniPool";
 import { useQuery } from "react-query";
+import { ERC20__factory } from "@assets/contracts";
 
 interface SwapProps {
   provider: ethers.providers.JsonRpcProvider;
@@ -28,7 +28,7 @@ export const Swap: React.FC<SwapProps> = ({ provider }) => {
 
   const [notificationApi, notificationElemt] = notification.useNotification();
 
-  const usdc = useMemo(() => new ethers.Contract(USDC_TOKEN_ADDRESS, ERC20_ABI, provider), [provider]);
+  const usdc = useMemo(() => ERC20__factory.connect(USDC_TOKEN_ADDRESS, provider), [provider]);
   const usdcBalanceOfResult = useContractReader(usdc, usdc.balanceOf, [address], {}, { blockNumberInterval: 1 });
   const usdcBalance = usdcBalanceOfResult[0] || ethers.constants.Zero;
 
@@ -115,7 +115,7 @@ export const Swap: React.FC<SwapProps> = ({ provider }) => {
         <ArrowDownOutlined style={{ fontSize: 24 }} />
 
         <Space direction="horizontal" align="center">
-          <img alt="eco" src="./$ECO_square.png" style={{ width: 32, height: 32, borderRadius: 16 }} />
+          <img alt="eco" src="./ECO_square.png" style={{ width: 32, height: 32, borderRadius: 16 }} />
           <Title style={{ margin: 0 }}>
             {disabled || !amountOut ? "---" : formatTokenAmount(convertTokenAmount(amountOut, 18))}
           </Title>

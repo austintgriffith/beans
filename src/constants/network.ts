@@ -1,6 +1,4 @@
-export const INFURA_ID = process.env.REACT_APP_INFURA_KEY;
-
-export const RPC_POLL_TIME = 30000;
+export const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 
 type Network = "localhost" | "mainnet" | "goerli" | "polygon" | "mumbai" | "optimism" | "goerli-optimism";
 
@@ -56,7 +54,7 @@ export const NETWORKS: Record<Network, INetwork> = {
     rpcUrl: `https://mainnet.optimism.io`,
   },
   "goerli-optimism": {
-    name: "Goerli optimism",
+    name: "goerli-optimism",
     color: "#f01a37",
     chainId: 420,
     blockExplorer: "https://goerli-optimism.etherscan.io/",

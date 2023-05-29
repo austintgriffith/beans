@@ -4,8 +4,8 @@ import { useQuery } from "react-query";
 import { Client, Presets, UserOperationMiddlewareFn } from "userop";
 import { SimpleAccount } from "userop/dist/preset/builder";
 
-import { ERC20_ABI } from "@assets/abis";
 import { ECO_TOKEN_ADDRESS, STACKUP_API_KEY, USDC_TOKEN_ADDRESS, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
+import { ERC20__factory } from "@assets/contracts";
 
 interface IStackupProvider {
   address: string;
@@ -109,7 +109,7 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
   const buildOps = async (to: string, amount: ethers.BigNumber) => {
     if (!simpleAccount) return;
 
-    const erc20 = new ethers.Contract(ECO_TOKEN_ADDRESS, ERC20_ABI, provider);
+    const erc20 = ERC20__factory.connect(ECO_TOKEN_ADDRESS, provider);
     const data = erc20.interface.encodeFunctionData("transfer", [to, amount]);
 
     const hasBeenDeployed = await hasWalletBeenDeployed((client as any).provider, simpleAccount.getSender());
