@@ -48,7 +48,7 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = ({ address, showAddre
           size={QR_SIZE}
           iconSize={72}
           errorLevel="H"
-          icon="./$ECO_square.png"
+          icon="./ECO_square.png"
           imageSettings={{ width: 105, height: 105, excavate: true, src: "" }}
         />
       </div>

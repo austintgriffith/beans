@@ -52,3 +52,6 @@ yarn-error.log*
 /doc
 
 /build
+
+# TypeChain generated code
+/src/assets/contracts

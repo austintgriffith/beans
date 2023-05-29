@@ -16,18 +16,21 @@
     "jsx": "preserve",
     "baseUrl": "./src",
     "paths": {
-      "@assets/*": ["assets/*"],
-      "@components/*": ["components/*"],
-      "@components": ["components"],
-      "@contexts/*": ["contexts/*"],
-      "@constants": ["constants"],
-      "@helpers/*": ["helpers/*"],
-      "@helpers": ["helpers/index"],
+      "@views/*": ["views/*"],
       "@hooks/*": ["hooks/*"],
-      "@hooks": ["hooks/index"],
       "@themes/*": ["themes/*"],
+      "@assets/*": ["assets/*"],
+      "@helpers/*": ["helpers/*"],
+      "@modules/*": ["modules/*"],
+      "@contexts/*": ["contexts/*"],
+      "@constants/*": ["constants/*"],
+      "@components/*": ["components/*"],
+
       "@views": ["views"],
-      "@views/*": ["views/*"]
+      "@hooks": ["hooks/index"],
+      "@constants": ["constants"],
+      "@helpers": ["helpers/index"],
+      "@components": ["components"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
