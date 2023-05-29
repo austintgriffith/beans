@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 
 import { NETWORK } from "@constants";
 import { About, Claim, Home } from "@views";
