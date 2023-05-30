@@ -96,9 +96,9 @@ export const AddressInput: React.FC<AddressInputProps> = props => {
         id="0xAddress"
         name="0xAddress"
         autoComplete="off"
+        style={{ width: 320 }}
         disabled={props.disabled}
         placeholder={props.placeholder ? props.placeholder : "address"}
-        style={{ fontSize: 20, fontFamily: "'Rubik', sans-serif" }}
         value={ethers.utils.isAddress(currentValue) && !isENS(currentValue) && isENS(ens) ? ens : currentValue}
         onChange={e => updateAddress(e.target.value)}
         addonAfter={

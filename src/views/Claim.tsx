@@ -14,6 +14,7 @@ import { PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
 import { blockExplorerLink, formatTokenAmount } from "@helpers";
 
 import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
+import { getTransaction } from "@helpers/contracts";
 
 interface ClaimProps {
   provider: ethers.providers.JsonRpcProvider;
@@ -60,10 +61,7 @@ export const Claim: React.FC<ClaimProps> = ({ provider }) => {
         recipient: address,
       });
 
-      // Wait 3s
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const tx = await provider.getTransaction(response.receipt.transactionHash);
+      const tx = await getTransaction(provider, response.receipt.transactionHash);
       if (tx.wait) await tx.wait();
 
       notification.success({

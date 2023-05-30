@@ -16,6 +16,8 @@ import {
 import { getSimpleAccount, useStackup, VERIFYING_PAYMASTER_USDC } from "@contexts/StackupContext";
 import {
   ECO_TOKEN_ADDRESS,
+  ENTRY_POINT_ADDRESS,
+  ExecutionResult,
   MULTICALL3_ADDRESS,
   NETWORK,
   USDC_TOKEN_ADDRESS,
@@ -29,15 +31,6 @@ const ECO_TOKEN = new Token(NETWORK.chainId, ECO_TOKEN_ADDRESS, 18, "ECO", "ECO"
 
 const TokenIn = USDC_TOKEN;
 const TokenOut = ECO_TOKEN;
-
-interface ExecutionResult {
-  paid: ethers.BigNumber;
-  preOpGas: ethers.BigNumber;
-  targetResult: string;
-  targetSuccess: boolean;
-  validAfter: number;
-  validUntil: number;
-}
 
 export const useUniPool = (provider: ethers.providers.JsonRpcProvider) => {
   const { address, signer, client } = useStackup();
@@ -191,7 +184,7 @@ export const useUniPool = (provider: ethers.providers.JsonRpcProvider) => {
 
       const entryPointInterface = EntryPoint__factory.createInterface();
       const callResult = await provider.call({
-        to: "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789",
+        to: ENTRY_POINT_ADDRESS,
         data: entryPointInterface.encodeFunctionData("simulateHandleOp", [userOp, TokenIn.address, balanceOfData]),
       });
 
