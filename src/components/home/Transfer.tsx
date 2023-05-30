@@ -39,6 +39,8 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   const [loading, setLoading] = useState(false);
   const [toAddress, setToAddress] = useState("");
 
+  const [notificationApi, notificationElemt] = notification.useNotification();
+
   const [searchParams] = useSearchParams();
   useEffect(() => {
     const _address = searchParams.get("addr");
@@ -54,7 +56,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
     try {
       const txHash = await transfer(toAddress, value);
 
-      notification.success({
+      notificationApi.success({
         placement: "topRight",
         message: "Transfer Executed!",
         duration: 10000,
@@ -72,7 +74,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
       setAmount("");
     } catch (e) {
       console.log("[gasless:transfer]", e);
-      notification.error({
+      notificationApi.error({
         placement: "topRight",
         message: "Transfer failed",
       });
@@ -147,6 +149,8 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
         icon={<ScanOutlined />}
         style={{ transform: "scale(2)", right: 48 }}
       />
+
+      {notificationElemt}
     </Space>
   );
 };
