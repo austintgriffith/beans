@@ -3,7 +3,8 @@ import { ethers } from "ethers";
 import { Client, Presets, UserOperationMiddlewareFn } from "userop";
 import { SimpleAccount } from "userop/dist/preset/builder";
 
-import { ECO_TOKEN_ADDRESS, STACKUP_API_KEY, USDC_TOKEN_ADDRESS } from "@constants";
+import { STACKUP_API_KEY, USDC_TOKEN_ADDRESS } from "@constants";
+import { PAYMASTER_URL } from "@modules/peanut/constants";
 
 interface IStackupProvider {
   address: string;
@@ -23,13 +24,19 @@ const StackupContext = React.createContext<IStackupProvider>({
 
 export const useStackup = () => React.useContext<IStackupProvider>(StackupContext);
 
+export const FLAT_FEE_RECIPIENT = ethers.utils.getAddress(process.env.REACT_APP_FLAT_FEE_RECIPIENT!);
+export const FLAT_FEE_AMOUNT = ethers.utils.parseEther(process.env.REACT_APP_FLAT_FEE_AMOUNT!);
+
 const config = {
   rpcUrl: `https://api.stackup.sh/v1/node/${STACKUP_API_KEY}`,
   entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
   simpleAccountFactory: "0x9406Cc6185a346906296840746125a0E44976454",
   paymaster: {
-    rpcUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_API_KEY}`,
-    contextEco: { type: "erc20token", token: ECO_TOKEN_ADDRESS },
+    rpcUrl: PAYMASTER_URL,
+    // rpcUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_API_KEY}`,
+    // contextEco: { type: "payg" },
+    // contextEco: { type: "erc20token", token: "0x54bBECeA38ff36D32323f8A754683C1F5433A89f" },
+    contextEco: { type: "flat" },
     contextUsdc: { type: "erc20token", token: USDC_TOKEN_ADDRESS },
   },
 };

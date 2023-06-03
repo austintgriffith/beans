@@ -12,7 +12,7 @@ export const TokenFee: React.FC<TokenFeeProps> = ({ fee }) => {
       <Typography.Text>
         <b>Expected Fee: </b>
         {fee ? (
-          `~${formatTokenAmount(fee, 2)} ECO`
+          `${formatTokenAmount(fee, 2)} ECO`
         ) : (
           <Skeleton.Input active size="small" style={{ width: 80, minWidth: 80 }} />
         )}

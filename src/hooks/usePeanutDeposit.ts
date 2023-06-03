@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 
 import Peanut from "@modules/peanut";
 import { ERC20__factory } from "@assets/contracts";
-import { useStackup } from "@contexts/StackupContext";
+import { FLAT_FEE_AMOUNT, FLAT_FEE_RECIPIENT, useStackup } from "@contexts/StackupContext";
 import { ECO_TOKEN_ADDRESS, ENTRY_POINT_ADDRESS, ExecutionResult, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
 import { PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
 import { EntryPoint__factory } from "userop/dist/typechain";
@@ -21,7 +21,10 @@ export const usePeanutDeposit = () => {
       const peanutAllowance = await eco.allowance(address, PEANUT_V3_ADDRESS);
       const paymasterAllowance = await eco.allowance(address, VERIFYING_PAYMASTER_ADDRESS);
 
-      const txs = [transaction];
+      const feeData = eco.interface.encodeFunctionData("transfer", [FLAT_FEE_RECIPIENT, FLAT_FEE_AMOUNT]);
+      const feeTx = { to: ECO_TOKEN_ADDRESS, data: feeData };
+
+      const txs = [feeTx, transaction];
 
       if (peanutAllowance.lt(value)) {
         const data = ERC20__factory.createInterface().encodeFunctionData("approve", [PEANUT_V3_ADDRESS, value]);
