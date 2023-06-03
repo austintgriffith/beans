@@ -5,8 +5,7 @@ import { Button, FloatButton, Input, InputProps, notification, Space, Typography
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 
 import { Address } from "@components";
-import { useTokenPrice } from "@hooks";
-import { useStackup } from "@contexts/StackupContext";
+import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
 import { AddressInput } from "@components/AddressInput";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
 
@@ -31,9 +30,9 @@ let scanner: (show: boolean) => void;
 export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   const navigate = useNavigate();
   const { provider } = useStackup();
-  const { transfer, expectedGasFee } = useEcoTransfer();
+  const { transfer } = useEcoTransfer();
 
-  const { data: ecoPrice = 0 } = useTokenPrice("eco");
+  // const { data: ecoPrice = 0 } = useTokenPrice("eco");
 
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -88,8 +87,8 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   };
 
   const total = getTotal(amount);
-  const tokensFee = ecoPrice && (Number(expectedGasFee.toBigInt()) / 1e18) * (1 / ecoPrice);
-  const exceedsBalance = total.add(ethers.utils.parseEther(tokensFee.toString())).gt(balance || ethers.constants.Zero);
+  // const tokensFee = ecoPrice && (Number(expectedGasFee.toBigInt()) / 1e18) * (1 / ecoPrice);
+  const exceedsBalance = total.add(FLAT_FEE_AMOUNT).gt(balance || ethers.constants.Zero);
   const disabled = exceedsBalance || loading || !amount || !toAddress;
 
   return (
@@ -112,7 +111,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
         onChange={e => setAmount(e.target.value)}
         prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
       />
-      <TokenFee fee={tokensFee} />
+      <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
       {exceedsBalance && amount ? (
         <div style={{ marginTop: 8 }}>
           <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}

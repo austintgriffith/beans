@@ -5,7 +5,7 @@ import { Alert, Button, Input, InputProps, notification, Space, Typography } fro
 import isEqual from "lodash.isequal";
 
 import Peanut from "@modules/peanut";
-import { useStackup } from "@contexts/StackupContext";
+import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
 import { TokenFee } from "@components/commons/TokenFee";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
 
@@ -15,16 +15,12 @@ import { PeanutV3__factory } from "@assets/contracts";
 import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 import { getTransaction } from "@helpers/contracts";
 import { usePeanutDeposit } from "@hooks/usePeanutDeposit";
-import { useQuery } from "react-query";
 
 function getValues({
   amount,
   balance,
-  tokensFee,
 }: {
   amount: string;
-  // Expected Gas In ECO tokens
-  tokensFee: ethers.BigNumber;
   // Wallet's current balance
   balance?: ethers.BigNumber;
 }) {
@@ -35,7 +31,7 @@ function getValues({
     total = ethers.constants.Zero;
   }
 
-  const exceedsBalance = total.add(tokensFee).gt(balance || ethers.constants.Zero);
+  const exceedsBalance = total.add(FLAT_FEE_AMOUNT).gt(balance || ethers.constants.Zero);
 
   return { total, exceedsBalance };
 }
@@ -52,7 +48,7 @@ interface ShareLink {
 
 export const Share: React.FC<TransferProps> = ({ balance }) => {
   const { address, provider } = useStackup();
-  const { deposit, simulateDeposit } = usePeanutDeposit();
+  const { deposit } = usePeanutDeposit();
 
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -121,16 +117,16 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
     if (event.key === "Enter") doSend();
   };
 
-  const { data: tokensFee = ethers.constants.Zero } = useQuery<unknown, unknown, ethers.BigNumber>(
-    "expected-fee-share",
-    () => simulateDeposit(),
-    {
-      retry: false,
-      refetchInterval: 5_000,
-    },
-  );
+  // const { data: tokensFee = ethers.constants.Zero } = useQuery<unknown, unknown, ethers.BigNumber>(
+  //   "expected-fee-share",
+  //   () => simulateDeposit(),
+  //   {
+  //     retry: false,
+  //     refetchInterval: 5_000,
+  //   },
+  // );
 
-  const { exceedsBalance } = getValues({ amount, balance, tokensFee });
+  const { exceedsBalance } = getValues({ amount, balance });
   const disabled = exceedsBalance || loading || !amount;
 
   return (
@@ -148,7 +144,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
         prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
       />
 
-      <TokenFee fee={parseFloat(ethers.utils.formatEther(tokensFee))} />
+      <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
 
       {exceedsBalance && amount ? (
         <div style={{ marginTop: 8 }}>
