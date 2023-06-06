@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { SendOutlined } from "@ant-design/icons";
-import { Alert, Button, Input, InputProps, notification, Space, Typography } from "antd";
+import { Button, Input, InputProps, Space, Typography } from "antd";
 import isEqual from "lodash.isequal";
 
-import Peanut from "@modules/peanut";
+import * as Peanut from "@modules/peanut";
 import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
 import { TokenFee } from "@components/commons/TokenFee";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
@@ -15,6 +15,7 @@ import { PeanutV3__factory } from "@assets/contracts";
 import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 import { getTransaction } from "@helpers/contracts";
 import { usePeanutDeposit } from "@hooks/usePeanutDeposit";
+import { useAlert } from "@hooks/useAlert";
 
 function getValues({
   amount,
@@ -40,23 +41,18 @@ interface TransferProps {
   balance?: ethers.BigNumber;
 }
 
-interface ShareLink {
-  link: string;
-  txHash: string;
-  amount: ethers.BigNumber;
-}
-
 export const Share: React.FC<TransferProps> = ({ balance }) => {
   const { address, provider } = useStackup();
   const { deposit } = usePeanutDeposit();
 
+  const [alertApi, alertElemt] = useAlert();
+
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
-  const [shareLink, setShareLink] = useState<ShareLink>();
 
   const doSend = async () => {
     setLoading(true);
-    setShareLink(undefined);
+    alertApi.clear();
     try {
       const value = convertAmount(amount);
 
@@ -64,7 +60,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
       const userOpResponse = await deposit(value, password);
 
       if (!userOpResponse) {
-        notification.error({ message: "Unexpected error", description: "Please contact us for help" });
+        alertApi.error({ message: "Unexpected error", description: "Please contact us for help" });
         return;
       }
 
@@ -76,7 +72,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
       const depositEvt = receipt.logs.find(log => log.address === evt.address && isEqual(log.topics, evt.topics));
 
       if (!depositEvt) {
-        notification.error({ message: "Unexpected error", description: "Please contact us for help" });
+        alertApi.error({ message: "Unexpected error", description: "Please contact us for help" });
         return;
       }
 
@@ -84,29 +80,27 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
 
       const link = Peanut.createLink(password, depositId);
 
-      setShareLink({ link, amount: value, txHash: userOpResponse.transactionHash });
-
-      notification.success({
-        placement: "topRight",
+      alertApi.success({
         message: "Share link created!",
-        duration: 10000,
         description: (
           <>
-            You have created a link for <b>{formatTokenAmount(ethers.utils.formatEther(value), 3)} ECO</b> tokens.
-            <br />
-            <Typography.Link href={blockExplorerLink(userOpResponse.transactionHash)} target="_blank">
-              See transaction.
-            </Typography.Link>
+            <Typography.Paragraph style={{ maxWidth: 400 }}>
+              Share this link to claim <b>{formatTokenAmount(ethers.utils.formatEther(value), 3)} ECO</b> tokens.
+              <Typography.Link href={blockExplorerLink(userOpResponse.transactionHash)} target="_blank">
+                See transaction.
+              </Typography.Link>
+              <pre>{link}</pre>
+            </Typography.Paragraph>
           </>
         ),
       });
 
       setAmount("");
     } catch (e) {
-      console.log("[share]", e);
-      notification.error({
-        placement: "topRight",
+      console.error("[share:error]", e);
+      alertApi.error({
         message: "Share failed",
+        description: "Please contact us for help",
       });
     } finally {
       setLoading(false);
@@ -114,17 +108,8 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
   };
 
   const handleKey: InputProps["onKeyUp"] = event => {
-    if (event.key === "Enter") doSend();
+    if (event.key === "Enter") return doSend();
   };
-
-  // const { data: tokensFee = ethers.constants.Zero } = useQuery<unknown, unknown, ethers.BigNumber>(
-  //   "expected-fee-share",
-  //   () => simulateDeposit(),
-  //   {
-  //     retry: false,
-  //     refetchInterval: 5_000,
-  //   },
-  // );
 
   const { exceedsBalance } = getValues({ amount, balance });
   const disabled = exceedsBalance || loading || !amount;
@@ -163,20 +148,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
         {!loading ? "Share" : "Creating Link..."}
       </Button>
 
-      {shareLink ? (
-        <Alert
-          message="Share link created"
-          type="success"
-          showIcon
-          description={
-            <Typography.Paragraph style={{ maxWidth: 400 }}>
-              Share this link to claim <b>{formatTokenAmount(ethers.utils.formatEther(shareLink.amount), 3)} ECO</b>{" "}
-              tokens.
-              <pre>{shareLink.link}</pre>
-            </Typography.Paragraph>
-          }
-        />
-      ) : null}
+      {alertElemt}
     </Space>
   );
 };

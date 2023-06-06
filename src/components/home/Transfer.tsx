@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ethers } from "ethers";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Button, FloatButton, Input, InputProps, notification, Space, Typography } from "antd";
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
+import { Button, FloatButton, Input, InputProps, Space, Typography } from "antd";
 
 import { Address } from "@components";
-import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
 import { AddressInput } from "@components/AddressInput";
+import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
 
-import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
-import { TokenFee } from "@components/commons/TokenFee";
+import { useAlert } from "@hooks/useAlert";
 import { useEcoTransfer } from "@hooks/useEcoTransfer";
+import { TokenFee } from "@components/commons/TokenFee";
+import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 
 function getTotal(amount: string) {
   try {
@@ -32,13 +34,11 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   const { provider } = useStackup();
   const { transfer } = useEcoTransfer();
 
-  // const { data: ecoPrice = 0 } = useTokenPrice("eco");
-
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [toAddress, setToAddress] = useState("");
 
-  const [notificationApi, notificationElemt] = notification.useNotification();
+  const [alertApi, alertElem] = useAlert();
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -51,14 +51,13 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
 
   const doSend = async () => {
     setLoading(true);
+    alertApi.clear();
     const value = convertAmount(amount);
     try {
       const txHash = await transfer(toAddress, value);
 
-      notificationApi.success({
-        placement: "topRight",
+      alertApi.success({
         message: "Transfer Executed!",
-        duration: 10000,
         description: (
           <>
             You have sent <b>{formatTokenAmount(ethers.utils.formatUnits(value, 18), 3)} ECO</b> tokens to{" "}
@@ -73,8 +72,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
       setAmount("");
     } catch (e) {
       console.log("[gasless:transfer]", e);
-      notificationApi.error({
-        placement: "topRight",
+      alertApi.error({
         message: "Transfer failed",
       });
     } finally {
@@ -87,69 +85,72 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   };
 
   const total = getTotal(amount);
-  // const tokensFee = ecoPrice && (Number(expectedGasFee.toBigInt()) / 1e18) * (1 / ecoPrice);
   const exceedsBalance = total.add(FLAT_FEE_AMOUNT).gt(balance || ethers.constants.Zero);
   const disabled = exceedsBalance || loading || !amount || !toAddress;
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <AddressInput
-        placeholder="to address"
-        value={toAddress}
-        onChange={setToAddress}
-        hoistScanner={toggle => (scanner = toggle)}
-      />
-      <Input
-        type="number"
-        size="large"
-        min="0"
-        pattern="\d*"
-        placeholder="amount to send"
-        value={amount}
-        onKeyPress={handleKey}
-        style={{ width: 320 }}
-        onChange={e => setAmount(e.target.value)}
-        prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
-      />
-      <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
-      {exceedsBalance && amount ? (
-        <div style={{ marginTop: 8 }}>
-          <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
-        </div>
-      ) : null}
-      <div
-        style={{
-          gap: 8,
-          margin: "auto",
-          display: "flex",
-          alignItems: "center",
-          flexDirection: "column",
-        }}
-      >
-        <Button
-          key="submit"
+    <>
+      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <AddressInput
+          placeholder="to address"
+          value={toAddress}
+          onChange={setToAddress}
+          hoistScanner={toggle => (scanner = toggle)}
+        />
+        <Input
+          type="number"
           size="large"
-          type="primary"
-          onClick={doSend}
-          loading={loading}
-          disabled={disabled}
-          icon={<SendOutlined />}
+          min="0"
+          pattern="\d*"
+          placeholder="amount to send"
+          value={amount}
+          onKeyPress={handleKey}
+          style={{ width: 320 }}
+          onChange={e => setAmount(e.target.value)}
+          prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
+        />
+        <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
+        {exceedsBalance && amount ? (
+          <div style={{ marginTop: 8 }}>
+            <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
+          </div>
+        ) : null}
+        <div
+          style={{
+            gap: 8,
+            margin: "auto",
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "column",
+          }}
         >
-          Send
-        </Button>
+          <Button
+            key="submit"
+            size="large"
+            type="primary"
+            onClick={doSend}
+            loading={loading}
+            disabled={disabled}
+            icon={<SendOutlined />}
+          >
+            Send
+          </Button>
 
-        {loading ? <span style={{ color: "#06153c" }}>Transferring tokens...</span> : null}
-      </div>
+          {loading ? <span style={{ color: "#06153c" }}>Transferring tokens...</span> : null}
+        </div>
+        {alertElem}
+      </Space>
 
-      <FloatButton
-        type="primary"
-        shape="circle"
-        onClick={() => scanner(true)}
-        icon={<ScanOutlined />}
-        style={{ transform: "scale(2)", right: 48 }}
-      />
-
-      {notificationElemt}
-    </Space>
+      {createPortal(
+        <FloatButton
+          type="primary"
+          shape="circle"
+          onClick={() => scanner(true)}
+          icon={<ScanOutlined />}
+          style={{ transform: "scale(2)", right: 48 }}
+        />,
+        document.body,
+      )}
+    </>
   );
 };
