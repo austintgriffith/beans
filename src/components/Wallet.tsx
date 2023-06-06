@@ -57,7 +57,7 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
   let display: React.ReactNode = null;
   let privateKeyButton;
   if (pk) {
-    const extraPkDisplayAdded: any = {};
+    const extraPkDisplayAdded: Record<string, boolean> = {};
     extraPkDisplayAdded[address] = true;
     for (const key in localStorage) {
       if (key.indexOf("metaPrivateKey_backup") >= 0) {
@@ -74,8 +74,8 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
         <div>
           <div>
             <i>
-              Pressing "Save Access" will prompt your browser to save access to your account. You can then access your
-              account using the saved credentials on this device or others.
+              Pressing &quot;Save Access&quot; will prompt your browser to save access to your account. You can then
+              access your account using the saved credentials on this device or others.
             </i>
           </div>
           <br />

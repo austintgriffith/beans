@@ -34,6 +34,8 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-qr-reader": "^2.1.4",
+    "@typescript-eslint/eslint-plugin": "^5.59.9",
+    "@typescript-eslint/parser": "^5.59.9",
     "dotenv": "^8.2.0",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.8.0",
@@ -60,11 +62,23 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:react/recommended",
       "plugin:prettier/recommended"
     ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "root": true,
     "rules": {
-      "prettier/prettier": "warn"
+      "prettier/prettier": "warn",
+      "@typescript-eslint/no-non-null-assertion": 0
+    },
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
     }
   },
   "lint-staged": {

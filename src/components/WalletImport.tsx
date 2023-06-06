@@ -35,7 +35,7 @@ export const WalletImport: React.FC<WalletImportProps> = ({ setShowImport }) => 
       <div style={{ marginTop: 16, width: 420 }}>
         <i>
           Log in to an existing wallet you have saved access to. When you do this, you will lose access to your current
-          account — so save that first if you've used it.
+          account — so save that first if you&apos;ve used it.
         </i>
       </div>
 
