@@ -4,14 +4,16 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, FloatButton, Input, InputProps, notification, Space, Typography } from "antd";
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 
-import { Address } from "@components";
+import { useEcoTransfer } from "@hooks/useEcoTransfer";
 import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
-import { AddressInput } from "@components/AddressInput";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
 
-import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
+// Components
+import { Address } from "@components";
 import { TokenFee } from "@components/commons/TokenFee";
-import { useEcoTransfer } from "@hooks/useEcoTransfer";
+import { AddressInput } from "@components/AddressInput";
+
+import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 
 function getTotal(amount: string) {
   try {

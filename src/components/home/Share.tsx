@@ -4,7 +4,7 @@ import { SendOutlined } from "@ant-design/icons";
 import { Alert, Button, Input, InputProps, notification, Space, Typography } from "antd";
 import isEqual from "lodash.isequal";
 
-import Peanut from "@modules/peanut";
+import * as Peanut from "@modules/peanut";
 import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
 import { TokenFee } from "@components/commons/TokenFee";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";

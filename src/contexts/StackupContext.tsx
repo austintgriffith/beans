@@ -15,29 +15,31 @@ interface IStackupProvider {
 }
 
 const StackupContext = React.createContext<IStackupProvider>({
+  client: {} as Client,
   signer: {} as ethers.Signer,
-  provider: {} as ethers.providers.JsonRpcProvider,
   simpleAccount: {} as SimpleAccount,
   address: ethers.constants.AddressZero,
-  client: {} as Client,
+  provider: {} as ethers.providers.JsonRpcProvider,
 });
 
 export const useStackup = () => React.useContext<IStackupProvider>(StackupContext);
 
-export const FLAT_FEE_RECIPIENT = ethers.utils.getAddress(process.env.REACT_APP_FLAT_FEE_RECIPIENT!);
 export const FLAT_FEE_AMOUNT = ethers.utils.parseEther(process.env.REACT_APP_FLAT_FEE_AMOUNT!);
+export const FLAT_FEE_RECIPIENT = ethers.utils.getAddress(process.env.REACT_APP_FLAT_FEE_RECIPIENT!);
 
 const config = {
   rpcUrl: `https://api.stackup.sh/v1/node/${STACKUP_API_KEY}`,
   entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
   simpleAccountFactory: "0x9406Cc6185a346906296840746125a0E44976454",
   paymaster: {
-    rpcUrl: PAYMASTER_URL,
-    // rpcUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_API_KEY}`,
-    // contextEco: { type: "payg" },
-    // contextEco: { type: "erc20token", token: "0x54bBECeA38ff36D32323f8A754683C1F5433A89f" },
-    contextEco: { type: "flat" },
-    contextUsdc: { type: "erc20token", token: USDC_TOKEN_ADDRESS },
+    eco: {
+      rpcUrl: PAYMASTER_URL,
+      context: { type: "flat" },
+    },
+    usdc: {
+      rpcUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_API_KEY}`,
+      context: { type: "erc20token", token: USDC_TOKEN_ADDRESS },
+    },
   },
 };
 
@@ -47,12 +49,12 @@ interface StackupProviderProps {
 }
 
 export const VERIFYING_PAYMASTER_ECO = Presets.Middleware.verifyingPaymaster(
-  config.paymaster.rpcUrl,
-  config.paymaster.contextEco,
+  config.paymaster.eco.rpcUrl,
+  config.paymaster.eco.context,
 );
 export const VERIFYING_PAYMASTER_USDC = Presets.Middleware.verifyingPaymaster(
-  config.paymaster.rpcUrl,
-  config.paymaster.contextUsdc,
+  config.paymaster.usdc.rpcUrl,
+  config.paymaster.usdc.context,
 );
 
 export const getSimpleAccount = (signer: ethers.Signer, paymaster?: UserOperationMiddlewareFn) => {
@@ -79,7 +81,9 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
       try {
         const simpleAccount = await getSimpleAccount(signer, VERIFYING_PAYMASTER_ECO);
         setSimpleAccount(simpleAccount);
-      } catch (err) {}
+      } catch (err) {
+        console.error("error creating simple account", err);
+      }
     })();
   }, [signer]);
 
@@ -89,7 +93,9 @@ export const StackupProvider: React.FC<React.PropsWithChildren<StackupProviderPr
       try {
         const client = await Client.init(config.rpcUrl, config.entryPoint);
         setClient(client);
-      } catch (err) {}
+      } catch (err) {
+        console.error("error initializing client", err);
+      }
     })();
   }, [signer]);
 

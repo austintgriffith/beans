@@ -37,7 +37,9 @@ export const AddressInput: React.FC<AddressInputProps> = props => {
             if (possibleAddress) {
               address = possibleAddress;
             }
-          } catch (e) {}
+          } catch (e) {
+            // Not a ENS
+          }
         }
         setValue(address);
         if (typeof onChange === "function") {

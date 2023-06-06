@@ -5,7 +5,7 @@ import { useContractReader } from "eth-hooks";
 import { Button, notification, Skeleton, Space, Typography } from "antd";
 import { SendOutlined } from "@ant-design/icons";
 
-import Peanut from "@modules/peanut";
+import * as Peanut from "@modules/peanut";
 
 import { PeanutV3__factory } from "@assets/contracts";
 import { useStackup } from "@contexts/StackupContext";

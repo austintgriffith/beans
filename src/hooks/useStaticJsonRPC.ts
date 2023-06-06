@@ -16,7 +16,6 @@ export default function useStaticJsonRPC(rpcUrl: string, chainId: string | numbe
         const p = await createProvider(rpcUrl, chainId);
         setProvider(p);
       } catch (error) {
-        // todo: show notification error about provider issues
         console.log(error);
       }
     })();

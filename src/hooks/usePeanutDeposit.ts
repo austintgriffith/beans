@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { ethers } from "ethers";
 
-import Peanut from "@modules/peanut";
+import * as Peanut from "@modules/peanut";
 import { ERC20__factory } from "@assets/contracts";
 import { FLAT_FEE_AMOUNT, FLAT_FEE_RECIPIENT, useStackup } from "@contexts/StackupContext";
 import { ECO_TOKEN_ADDRESS, ENTRY_POINT_ADDRESS, ExecutionResult, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
