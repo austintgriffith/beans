@@ -1,15 +1,14 @@
 import { ethers } from "ethers";
-import { ClaimRequest } from "@modules/peanut/types";
-import { PEANUT_CLAIM_URL, PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
-import { PeanutV3__factory } from "@assets/contracts";
-import { ECO_TOKEN_ADDRESS } from "@constants";
+import isEqual from "lodash.isequal";
 
-enum ClaimSearchParams {
-  NETWORK = "c",
-  VERSION = "v",
-  PASSWORD = "p",
-  DEPOSIT_ID = "i",
-}
+import { ECO_TOKEN_ADDRESS } from "@constants/tokens";
+import { PeanutV3__factory } from "@assets/contracts/factories";
+
+import { ClaimRequest } from "@modules/peanut/types";
+import { ClaimSearchParams } from "@modules/peanut/utils";
+import { PEANUT_CLAIM_URL, PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
+
+export { getParamsFromLink } from "@modules/peanut/utils";
 
 export function generateKeysFromString(string: string) {
   const privateKey = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(string));
@@ -21,19 +20,6 @@ export function generateKeysFromString(string: string) {
     privateKey: privateKey,
     publicKey: publicKey,
   };
-}
-
-export function getParamsFromLink(link = window.location.href) {
-  const url = new URL(link);
-
-  const contractVersion = url.searchParams.get(ClaimSearchParams.VERSION);
-  const password = url.searchParams.get(ClaimSearchParams.PASSWORD);
-
-  const chainId = parseInt(url.searchParams.get(ClaimSearchParams.NETWORK) || "0");
-  const _depositIdx = url.searchParams.get(ClaimSearchParams.DEPOSIT_ID);
-  const depositIdx = _depositIdx ? parseInt(_depositIdx) : undefined;
-
-  return { chainId, contractVersion, depositIdx, password };
 }
 
 export function getRandomString(length = 32) {
@@ -60,6 +46,24 @@ export function createLink(password: string, depositId: number): string {
   url.searchParams.set(ClaimSearchParams.PASSWORD, password);
 
   return url.toString();
+}
+
+export function getDepositEvent(recipient: string, receipt: ethers.ContractReceipt) {
+  const peanut = new ethers.Contract(PEANUT_V3_ADDRESS, PeanutV3__factory.abi);
+  const event = peanut.filters.DepositEvent(null, null, null, recipient);
+  const depositEvt = receipt.logs.find(log => log.address === event.address && isEqual(log.topics, event.topics));
+
+  if (!depositEvt) {
+    throw new Error("Could not find deposit event");
+  }
+
+  const [id, type, amount, sender] = peanut.interface.decodeEventLog(
+    "DepositEvent",
+    depositEvt.data,
+    depositEvt.topics,
+  );
+
+  return { id, type, amount, sender };
 }
 
 export async function signClaimTx(password: string, recipient: string) {

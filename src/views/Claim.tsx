@@ -99,7 +99,7 @@ export const Claim: React.FC<ClaimProps> = ({ provider }) => {
       >
         <EcoLogo style={{ width: 28, height: 28 }} />
         {deposit ? (
-          <Typography.Title level={2} style={{ margin: 0 }}>
+          <Typography.Title data-cy="claim-amount" level={2} style={{ margin: 0 }}>
             {formatTokenAmount(parseFloat(ethers.utils.formatEther(deposit.amount)), 2)}
           </Typography.Title>
         ) : (
@@ -107,12 +107,13 @@ export const Claim: React.FC<ClaimProps> = ({ provider }) => {
         )}
       </Space.Compact>
       <Button
+        data-cy="claim-btn"
         key="submit"
         size="large"
         type="primary"
         onClick={doSend}
         loading={loading}
-        disabled={!deposit}
+        disabled={!deposit || loading}
         icon={<SendOutlined />}
       >
         Claim

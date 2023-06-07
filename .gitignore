@@ -55,3 +55,7 @@ yarn-error.log*
 
 # TypeChain generated code
 /src/assets/contracts
+
+# Cypress
+/cypress/videos
+/cypress/screenshots
