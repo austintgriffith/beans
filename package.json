@@ -10,8 +10,7 @@
     "prettier": "npx prettier --write . '!(node_module|build)/**/*'",
     "typechain": "typechain --target ethers-v5 --out-dir src/assets/contracts src/assets/abis/*.json",
     "postinstall": "yarn typechain",
-    "test:e2e": "cynpress run",
-    "test:e2e:docker": "start-server-and-test 'yarn start' http-get://localhost:3000 'yarn test:e2e'"
+    "test:e2e": "cynpress run"
   },
   "dependencies": {
     "@ant-design/icons": "^5.1.0",
@@ -49,7 +48,6 @@
     "prettier": "^2.8.8",
     "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1",
-    "start-server-and-test": "^2.0.0",
     "tsconfig-paths-webpack-plugin": "^4.0.1",
     "typechain": "^8.2.0",
     "typescript": "^5.0.4"
