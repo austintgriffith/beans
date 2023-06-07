@@ -9,11 +9,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install Serve
+        run: yarn add -D serve
+
       - name: Cypress run
         uses: cypress-io/github-action@v5
         with:
           build: yarn build
-          start: yarn add -D serve && serve -s build
+          start: serve -s build
           browser: chrome
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
