@@ -58,3 +58,19 @@ body {
 .ant-input {
   font-size: 16px !important;
 }
+
+.tokens-segment .ant-segmented-item-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tokens-segment .ant-segmented-item-icon {
+  height: 16px;
+  line-height: 16px;
+}
+
+.tokens-segment .ant-segmented-item-icon img {
+  vertical-align: top;
+}

@@ -1,75 +1,80 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { ethers } from "ethers";
-import { useContractReader } from "eth-hooks";
 import { Segmented, Skeleton, Space, Typography } from "antd";
+import { useNavigate } from "react-router-dom";
 
 import { QRPunkBlockie } from "@components";
-import { Transfer } from "@components/home/Transfer";
+import { Segments } from "@components/home";
+import { TokenIcon } from "@components/token";
+import { TokenContext } from "@components/home/context/TokenContext";
+
+import { getTokenInfo, Token } from "@constants";
 import { formatTokenAmount } from "@helpers";
-import { ECO_TOKEN_ADDRESS } from "@constants";
+import { useBalance } from "@hooks/useBalance";
 import { useStackup } from "@contexts/StackupContext";
 
-import { ERC20__factory } from "@assets/contracts";
-import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
-import { Share } from "@components/home/Share";
-import { SendOutlined, ShareAltOutlined } from "@ant-design/icons";
-
-enum Operation {
-  Transfer,
-  Share,
-}
-
 interface HomeProps {
-  provider: ethers.providers.JsonRpcProvider;
+  token: Token;
 }
 
-export const Home: React.FC<HomeProps> = ({ provider }) => {
+const TokenBalance: React.FC<{ decimals: number; balance?: ethers.BigNumber; icon?: React.ReactNode }> = ({
+  icon,
+  decimals,
+  balance,
+}) => {
+  return (
+    <Space.Compact direction="horizontal" style={{ alignItems: "center", gap: 8 }}>
+      {icon}
+      {balance ? (
+        <Typography.Title data-cy="home-balance" level={2} style={{ margin: 0 }}>
+          {formatTokenAmount(parseFloat(ethers.utils.formatUnits(balance, decimals)), 3)}
+        </Typography.Title>
+      ) : (
+        <Skeleton.Input />
+      )}
+    </Space.Compact>
+  );
+};
+
+export const Home: React.FC<HomeProps> = ({ token }) => {
+  const navigate = useNavigate();
   const { address } = useStackup();
+  const { balance } = useBalance(token, address);
+  const { decimals } = getTokenInfo(token);
 
-  const [operation, setOperation] = useState(Operation.Transfer);
-
-  const eco = useMemo(() => ERC20__factory.connect(ECO_TOKEN_ADDRESS, provider), [provider]);
-  const [balance] = useContractReader(eco, eco.balanceOf, [address], {}, { blockNumberInterval: 1 });
-
-  const content = useMemo(() => {
-    switch (operation) {
-      case Operation.Transfer:
-        return <Transfer balance={balance} />;
-      case Operation.Share:
-        return <Share balance={balance} />;
-    }
-  }, [balance, operation]);
+  const changeToken = (token: Token) => navigate(`/t/${token}`, { state: { redirect: true } });
 
   return (
-    <Space direction="vertical" size="large" style={{ marginTop: 24 }}>
-      <Space.Compact
-        direction="horizontal"
-        style={{ gap: 8, width: "100%", alignItems: "center", justifyContent: "center", minHeight: 38 }}
-      >
-        <EcoLogo style={{ width: 28, height: 28 }} />
-        {balance ? (
-          <Typography.Title data-cy="home-balance" level={2} style={{ margin: 0 }}>
-            {formatTokenAmount(parseFloat(ethers.utils.formatEther(balance)), 3)}
-          </Typography.Title>
-        ) : (
-          <Skeleton.Input />
-        )}
-      </Space.Compact>
-
-      <QRPunkBlockie address={address} />
-
-      <Space direction="vertical" align="center" style={{ width: "100%" }}>
+    <TokenContext.Provider value={{ token, balance }}>
+      <Space direction="vertical" align="center" size="large" style={{ width: "100%" }}>
         <Segmented
-          data-cy="home-segments"
-          onChange={value => setOperation(value as Operation)}
+          value={token}
+          className="tokens-segment"
+          onChange={token => changeToken(token as Token)}
+          style={{ width: "fit-content", margin: "0 auto" }}
           options={[
-            { icon: <SendOutlined />, value: Operation.Transfer, label: "Transfer" },
-            { icon: <ShareAltOutlined />, value: Operation.Share, label: "Share" },
+            {
+              value: Token.ECO,
+              icon: <TokenIcon token={Token.ECO} style={{ width: 16, height: 16 }} />,
+            },
+            {
+              value: Token.USDC,
+              icon: <TokenIcon token={Token.USDC} style={{ width: 16, height: 16 }} />,
+            },
           ]}
         />
-      </Space>
 
-      {content}
-    </Space>
+        <TokenBalance
+          balance={balance}
+          decimals={decimals}
+          icon={<TokenIcon token={token} style={{ width: 28, height: 28 }} />}
+        />
+
+        <Space direction="vertical" size="large">
+          <QRPunkBlockie address={address} />
+          <Segments />
+        </Space>
+      </Space>
+    </TokenContext.Provider>
   );
 };

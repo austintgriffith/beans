@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
 
-export function convertAmount(amount = "0") {
+export function convertAmount(amount = "0", decimals = 18) {
   try {
-    return ethers.utils.parseEther(amount.toString());
+    return ethers.utils.parseUnits(amount.toString(), decimals);
   } catch (e) {
     const floatVal = parseFloat(amount.toString()).toFixed(8);
-    return ethers.utils.parseEther(floatVal.toString());
+    return ethers.utils.parseUnits(floatVal.toString(), decimals);
   }
 }
 

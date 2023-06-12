@@ -6,35 +6,37 @@ import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 import { Alert, Button, FloatButton, Input, InputProps, Space, Typography } from "antd";
 
 import { useAlert } from "@hooks/useAlert";
-import { useEcoTransfer } from "@hooks/useEcoTransfer";
-import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
+import { useTokenTransfer } from "@hooks/useTokenTransfer";
+import { FeeOperation, useOperationFee } from "@hooks/useOperationFee";
+import { useStackup } from "@contexts/StackupContext";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
 
 // Components
 import { Address } from "@components";
+import { TokenIcon } from "@components/token";
 import { TokenFee } from "@components/commons/TokenFee";
 import { AddressInput } from "@components/AddressInput";
+import { useCurrentToken } from "@components/home/context/TokenContext";
+import { getTokenInfo } from "@constants";
 
-import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
-
-function getTotal(amount: string) {
+function getTotal(amount: string, decimals: number) {
   try {
-    return convertAmount(amount).abs();
+    return convertAmount(amount, decimals).abs();
   } catch (e) {
     return ethers.constants.Zero;
   }
 }
 
-interface TransferProps {
-  balance?: ethers.BigNumber;
-}
-
 let scanner: (show: boolean) => void;
 
-export const Transfer: React.FC<TransferProps> = ({ balance }) => {
+export const Transfer: React.FC = () => {
   const navigate = useNavigate();
   const { provider } = useStackup();
-  const { transfer } = useEcoTransfer();
+  const { token: tokenId, balance } = useCurrentToken();
+  const { transfer } = useTokenTransfer(tokenId);
+  const token = getTokenInfo(tokenId);
+
+  const { data: fee } = useOperationFee(tokenId, FeeOperation.Transfer);
 
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,18 +54,22 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   }, [navigate, searchParams]);
 
   const doSend = async () => {
+    if (!fee) return;
     setLoading(true);
     alertApi.clear();
-    const value = convertAmount(amount);
+    const value = convertAmount(amount, token.decimals);
     try {
-      const txHash = await transfer(toAddress, value);
+      const txHash = await transfer(toAddress, value, fee);
 
       alertApi.success({
         message: "Transfer Executed!",
         description: (
           <>
-            You have sent <b>{formatTokenAmount(ethers.utils.formatUnits(value, 18), 3)} ECO</b> tokens to{" "}
-            <Address provider={provider} address={toAddress} style={{ fontWeight: "bold" }} />.<br />
+            You have sent{" "}
+            <b>
+              {formatTokenAmount(ethers.utils.formatUnits(value, token.decimals), 3)} {token.name}
+            </b>{" "}
+            tokens to <Address provider={provider} address={toAddress} style={{ fontWeight: "bold" }} />.<br />
             <Typography.Link href={blockExplorerLink(txHash)} target="_blank">
               See transaction.
             </Typography.Link>
@@ -86,13 +92,13 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
     if (event.key === "Enter") doSend();
   };
 
-  const total = getTotal(amount);
-  const exceedsBalance = total.add(FLAT_FEE_AMOUNT).gt(balance || ethers.constants.Zero);
+  const total = getTotal(amount, token.decimals);
+  const exceedsBalance = total.add(fee || ethers.constants.Zero).gt(balance || ethers.constants.Zero);
   const disabled = exceedsBalance || loading || !amount || !toAddress;
 
   return (
     <>
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space direction="vertical" size="large" align="center" style={{ width: "100%" }}>
         <AddressInput
           data-cy="transfer-input-recipient"
           placeholder="to address"
@@ -111,9 +117,9 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
           onKeyPress={handleKey}
           style={{ width: 320 }}
           onChange={e => setAmount(e.target.value)}
-          prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
+          prefix={<TokenIcon token={tokenId} style={{ width: 20, height: 20 }} />}
         />
-        <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
+        <TokenFee token={tokenId} fee={fee} />
         {exceedsBalance && amount && !loading ? (
           <Alert
             showIcon

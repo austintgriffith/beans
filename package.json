@@ -17,6 +17,7 @@
     "@uniswap/sdk": "^3.0.3",
     "@uniswap/sdk-core": "^3.2.2",
     "@uniswap/v3-sdk": "^3.9.0",
+    "@wagmi/core": "^0.8.19",
     "antd": "~5.5.0",
     "eth-hooks": "^4.6.2",
     "ethers": "^5.7.2",
