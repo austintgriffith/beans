@@ -51,7 +51,7 @@ export const NETWORKS: Record<Network, INetwork> = {
     color: "#f01a37",
     chainId: 10,
     blockExplorer: "https://optimistic.etherscan.io/",
-    rpcUrl: `https://mainnet.optimism.io`,
+    rpcUrl: `https://optimism-mainnet.infura.io/v3/${INFURA_ID}`,
   },
   "goerli-optimism": {
     name: "goerli-optimism",
