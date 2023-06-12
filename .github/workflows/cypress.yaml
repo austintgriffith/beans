@@ -1,0 +1,35 @@
+name: Cypress Tests
+
+on: push
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v5
+        with:
+          build: yarn build
+          start: yarn start
+          browser: chrome
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          CYPRESS_FAUCET_PK: ${{secrets.CYPRESS_FAUCET_PK}}
+          REACT_APP_INFURA_ID: ${{secrets.REACT_APP_INFURA_ID}}
+          REACT_APP_NETWORK: ${{env.REACT_APP_NETWORK}}
+          REACT_APP_ECO_TOKEN_ADDRESS: ${{env.REACT_APP_ECO_TOKEN_ADDRESS}}
+          REACT_APP_USDC_TOKEN_ADDRESS: ${{env.REACT_APP_USDC_TOKEN_ADDRESS}}
+          REACT_APP_RELAYER_URL: ${{env.REACT_APP_RELAYER_URL}}
+          REACT_APP_FLAT_FEE_RECIPIENT: ${{env.REACT_APP_FLAT_FEE_RECIPIENT}}
+          REACT_APP_FLAT_FEE_AMOUNT: ${{env.REACT_APP_FLAT_FEE_AMOUNT}}
+          CYPRESS_RPC_URL: ${{env.CYPRESS_RPC_URL}}
+
+      - name: Save videos folder
+        uses: actions/upload-artifact@v3
+        with:
+          name: videos
+          if-no-files-found: error
+          path: cypress/videos

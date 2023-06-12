@@ -23,6 +23,7 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
   const [showImport, setShowImport] = useState(false);
 
   const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
   useEffect(() => {
     const password = searchParams.get("password");
@@ -30,23 +31,6 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
       navigate("/");
     }
   }, [navigate, searchParams]);
-
-  const providerSend = provider ? (
-    <Tooltip title="Wallet">
-      <SettingOutlined
-        onClick={() => setOpen(!open)}
-        style={{
-          cursor: "pointer",
-          verticalAlign: "middle",
-          color: color,
-          padding: padding ?? 7,
-          fontSize: size ?? 28,
-        }}
-      />
-    </Tooltip>
-  ) : (
-    ""
-  );
 
   const showImportButton = (
     <Button onClick={() => setShowImport(true)} icon={<SaveOutlined />}>
@@ -109,8 +93,20 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
   }
 
   return (
-    <span>
-      {providerSend}
+    <>
+      <Tooltip title="Wallet">
+        <SettingOutlined
+          data-cy="header-config-btn"
+          onClick={() => setOpen(!open)}
+          style={{
+            cursor: "pointer",
+            verticalAlign: "middle",
+            color: color,
+            padding: padding ?? 7,
+            fontSize: size ?? 28,
+          }}
+        />
+      </Tooltip>
       <Modal
         open={open}
         onOk={() => setOpen(!open)}
@@ -120,7 +116,7 @@ export const Wallet: React.FC<WalletProps> = ({ address, signer, padding, color,
       >
         {showImport ? <WalletImport setShowImport={setShowImport} /> : display}
       </Modal>
-    </span>
+    </>
   );
 };
 

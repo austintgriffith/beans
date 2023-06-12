@@ -9,7 +9,8 @@
     "lint": "eslint ./src/**/*.{ts,tsx} --ignore-path ./.eslintignore --max-warnings=0",
     "prettier": "npx prettier --write . '!(node_module|build)/**/*'",
     "typechain": "typechain --target ethers-v5 --out-dir src/assets/contracts src/assets/abis/*.json",
-    "postinstall": "yarn typechain"
+    "postinstall": "yarn typechain",
+    "test:e2e": "cynpress run"
   },
   "dependencies": {
     "@ant-design/icons": "^5.1.0",
@@ -36,9 +37,12 @@
     "@types/react-qr-reader": "^2.1.4",
     "@typescript-eslint/eslint-plugin": "^5.59.9",
     "@typescript-eslint/parser": "^5.59.9",
+    "cypress": "^12.13.0",
+    "cypress-wait-until": "^1.7.2",
     "dotenv": "^8.2.0",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-cypress": "^2.13.3",
     "eslint-plugin-prettier": "^4.2.1",
     "lint-staged": "^13.2.1",
     "prettier": "^2.8.8",
@@ -65,20 +69,17 @@
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
       "plugin:react/recommended",
-      "plugin:prettier/recommended"
+      "plugin:prettier/recommended",
+      "plugin:cypress/recommended"
     ],
+    "root": true,
     "parser": "@typescript-eslint/parser",
     "plugins": [
       "@typescript-eslint"
     ],
-    "root": true,
     "rules": {
       "prettier/prettier": "warn",
       "@typescript-eslint/no-non-null-assertion": 0
-    },
-    "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
     }
   },
   "lint-staged": {

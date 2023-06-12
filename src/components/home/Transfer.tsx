@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ethers } from "ethers";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ScanOutlined, SendOutlined } from "@ant-design/icons";
-import { Button, FloatButton, Input, InputProps, Space, Typography } from "antd";
+import { Alert, Button, FloatButton, Input, InputProps, Space, Typography } from "antd";
 
 import { useAlert } from "@hooks/useAlert";
 import { useEcoTransfer } from "@hooks/useEcoTransfer";
@@ -40,7 +40,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
   const [loading, setLoading] = useState(false);
   const [toAddress, setToAddress] = useState("");
 
-  const [alertApi, alertElem] = useAlert();
+  const [alertApi, alertElem] = useAlert({ className: "transfer-alert" });
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -94,6 +94,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
     <>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <AddressInput
+          data-cy="transfer-input-recipient"
           placeholder="to address"
           value={toAddress}
           onChange={setToAddress}
@@ -104,6 +105,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
           size="large"
           min="0"
           pattern="\d*"
+          data-cy="transfer-input-amount"
           placeholder="amount to send"
           value={amount}
           onKeyPress={handleKey}
@@ -112,10 +114,13 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
           prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
         />
         <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
-        {exceedsBalance && amount ? (
-          <div style={{ marginTop: 8 }}>
-            <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
-          </div>
+        {exceedsBalance && amount && !loading ? (
+          <Alert
+            showIcon
+            type="error"
+            style={{ marginTop: 8 }}
+            message={<span data-cy="transfer-insufficient-funds">Transfer amount plus fee charge exceeds balance</span>}
+          />
         ) : null}
         <div
           style={{
@@ -127,6 +132,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
           }}
         >
           <Button
+            data-cy="transfer-send-btn"
             key="submit"
             size="large"
             type="primary"

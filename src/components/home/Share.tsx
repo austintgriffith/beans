@@ -1,21 +1,16 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { SendOutlined } from "@ant-design/icons";
-import { Button, Input, InputProps, Space, Typography } from "antd";
-import isEqual from "lodash.isequal";
+import { Alert, Button, Input, InputProps, Space, Typography } from "antd";
 
 import * as Peanut from "@modules/peanut";
-import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
-import { TokenFee } from "@components/commons/TokenFee";
-import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
-
-import { PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
-import { PeanutV3__factory } from "@assets/contracts";
-
-import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
-import { getTransaction } from "@helpers/contracts";
-import { usePeanutDeposit } from "@hooks/usePeanutDeposit";
 import { useAlert } from "@hooks/useAlert";
+import { usePeanutDeposit } from "@hooks/usePeanutDeposit";
+import { blockExplorerLink, convertAmount, formatTokenAmount, getTransaction } from "@helpers";
+
+import { TokenFee } from "@components/commons/TokenFee";
+import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
+import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 
 function getValues({
   amount,
@@ -43,9 +38,9 @@ interface TransferProps {
 
 export const Share: React.FC<TransferProps> = ({ balance }) => {
   const { address, provider } = useStackup();
-  const { deposit } = usePeanutDeposit();
+  const { deposit: makeDeposit } = usePeanutDeposit();
 
-  const [alertApi, alertElemt] = useAlert();
+  const [alertApi, alertElemt] = useAlert({ className: "share-alert" });
 
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +52,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
       const value = convertAmount(amount);
 
       const password = Peanut.getRandomString();
-      const userOpResponse = await deposit(value, password);
+      const userOpResponse = await makeDeposit(value, password);
 
       if (!userOpResponse) {
         alertApi.error({ message: "Unexpected error", description: "Please contact us for help" });
@@ -67,18 +62,8 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
       const tx = await getTransaction(provider, userOpResponse.transactionHash);
       const receipt = await tx.wait();
 
-      const peanut = PeanutV3__factory.connect(PEANUT_V3_ADDRESS, provider);
-      const evt = peanut.filters.DepositEvent(null, null, null, address);
-      const depositEvt = receipt.logs.find(log => log.address === evt.address && isEqual(log.topics, evt.topics));
-
-      if (!depositEvt) {
-        alertApi.error({ message: "Unexpected error", description: "Please contact us for help" });
-        return;
-      }
-
-      const [depositId] = peanut.interface.decodeEventLog("DepositEvent", depositEvt.data, depositEvt.topics);
-
-      const link = Peanut.createLink(password, depositId);
+      const deposit = Peanut.getDepositEvent(address, receipt);
+      const link = Peanut.createLink(password, deposit.id);
 
       alertApi.success({
         message: "Share link created!",
@@ -121,6 +106,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
         size="large"
         min="0"
         pattern="\d*"
+        data-cy="share-input-amount"
         placeholder="amount to send"
         value={amount}
         onKeyPress={handleKey}
@@ -131,12 +117,16 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
 
       <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
 
-      {exceedsBalance && amount ? (
-        <div style={{ marginTop: 8 }}>
-          <span style={{ color: "rgb(200,0,0)" }}>amount + fee exceeds balance</span>{" "}
-        </div>
+      {exceedsBalance && amount && !loading ? (
+        <Alert
+          showIcon
+          type="error"
+          style={{ marginTop: 8 }}
+          message={<span data-cy="share-insufficient-funds">Transfer amount plus fee charge exceeds balance</span>}
+        />
       ) : null}
       <Button
+        data-cy="share-send-btn"
         key="submit"
         size="large"
         type="primary"

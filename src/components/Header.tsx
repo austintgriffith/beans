@@ -6,7 +6,7 @@ import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
 
 import "./Header.css";
 
-const Item: React.FC<React.PropsWithChildren<{ to: string }>> = ({ to, children }) => {
+const Item: React.FC<React.PropsWithChildren<{ to: string }>> = ({ to, children, ...props }) => {
   const location = useLocation();
   const selected = to === location.pathname;
 
@@ -14,7 +14,7 @@ const Item: React.FC<React.PropsWithChildren<{ to: string }>> = ({ to, children 
   if (selected) classes.push("selected");
 
   return (
-    <Link to={to} className={classes.join(" ")}>
+    <Link {...props} to={to} className={classes.join(" ")}>
       {children}
     </Link>
   );
@@ -43,8 +43,12 @@ export const Header: React.FC<React.PropsWithChildren> = ({ children }) => {
             gap: 48,
           }}
         >
-          <Item to="/">Home</Item>
-          <Item to="/about">About</Item>
+          <Item to="/" data-cy="header-home-btn">
+            Home
+          </Item>
+          <Item to="/about" data-cy="header-about-btn">
+            About
+          </Item>
           {/*<Item to="/swap">Swap</Item>*/}
         </Row>
       </Col>

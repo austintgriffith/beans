@@ -11,11 +11,11 @@ interface AlertApi {
   error(props: AlertProps): void;
 }
 
-export const useAlert = (): [AlertApi, React.ReactElement | null] => {
+export const useAlert = (defaultProps: AlertProps = {}): [AlertApi, React.ReactElement | null] => {
   const [element, setElement] = useState<React.ReactElement | null>(null);
 
   const clear = () => setElement(null);
-  const show = (props: AlertProps) => setElement(<Alert showIcon {...props} />);
+  const show = (props: AlertProps) => setElement(<Alert showIcon {...defaultProps} {...props} />);
 
   const success = (props: AlertProps) => show({ ...props, type: "success" });
   const error = (props: AlertProps) => show({ ...props, type: "error" });

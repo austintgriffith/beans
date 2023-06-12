@@ -48,7 +48,7 @@ export const Home: React.FC<HomeProps> = ({ provider }) => {
       >
         <EcoLogo style={{ width: 28, height: 28 }} />
         {balance ? (
-          <Typography.Title level={2} style={{ margin: 0 }}>
+          <Typography.Title data-cy="home-balance" level={2} style={{ margin: 0 }}>
             {formatTokenAmount(parseFloat(ethers.utils.formatEther(balance)), 3)}
           </Typography.Title>
         ) : (
@@ -60,6 +60,7 @@ export const Home: React.FC<HomeProps> = ({ provider }) => {
 
       <Space direction="vertical" align="center" style={{ width: "100%" }}>
         <Segmented
+          data-cy="home-segments"
           onChange={value => setOperation(value as Operation)}
           options={[
             { icon: <SendOutlined />, value: Operation.Transfer, label: "Transfer" },

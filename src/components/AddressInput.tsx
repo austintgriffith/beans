@@ -11,20 +11,24 @@ const provider = new ethers.providers.InfuraProvider("mainnet", process.env.REAC
 
 interface AddressInputProps {
   value: string;
-
   disabled?: InputProps["disabled"];
   placeholder?: InputProps["placeholder"];
   onChange?: (value: string) => void;
-
   hoistScanner?: (func: (show: boolean) => void) => void;
 }
 
-export const AddressInput: React.FC<AddressInputProps> = props => {
-  const { onChange } = props;
-  const [value, setValue] = useState(props.value);
+export const AddressInput: React.FC<AddressInputProps> = ({
+  value: rawInput,
+  disabled,
+  placeholder,
+  onChange,
+  hoistScanner,
+  ...props
+}) => {
+  const [value, setValue] = useState(rawInput);
   const [scan, setScan] = useState(false);
 
-  const currentValue = typeof props.value !== "undefined" ? props.value : value;
+  const currentValue = typeof rawInput !== "undefined" ? rawInput : value;
   const [ens] = useResolveEnsAddress(provider, currentValue);
 
   const updateAddress = useCallback(
@@ -50,11 +54,7 @@ export const AddressInput: React.FC<AddressInputProps> = props => {
     [onChange],
   );
 
-  props &&
-    props.hoistScanner &&
-    props.hoistScanner(() => {
-      setScan(!scan);
-    });
+  hoistScanner && hoistScanner(() => setScan(!scan));
 
   return (
     <>
@@ -94,21 +94,22 @@ export const AddressInput: React.FC<AddressInputProps> = props => {
         </div>
       ) : null}
       <Input
+        {...props}
         size="large"
         id="0xAddress"
         name="0xAddress"
         autoComplete="off"
         style={{ width: 320 }}
-        disabled={props.disabled}
-        placeholder={props.placeholder ? props.placeholder : "address"}
+        disabled={disabled}
+        placeholder={placeholder ? placeholder : "address"}
         value={ethers.utils.isAddress(currentValue) && !isENS(currentValue) && isENS(ens) ? ens : currentValue}
         onChange={e => updateAddress(e.target.value)}
         addonAfter={
           <div
             style={{
-              cursor: props.disabled ? "not-allowed" : "pointer",
+              cursor: disabled ? "not-allowed" : "pointer",
             }}
-            onClick={() => !props.disabled && setScan(!scan)}
+            onClick={() => !disabled && setScan(!scan)}
           >
             <QrcodeOutlined height={32} width={32} style={{ fontSize: 18 }} />
           </div>
