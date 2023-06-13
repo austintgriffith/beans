@@ -92,7 +92,7 @@ export const Transfer: React.FC<TransferProps> = ({ balance }) => {
 
   return (
     <>
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Space direction="vertical" size="large" align="center" style={{ width: "100%" }}>
         <AddressInput
           data-cy="transfer-input-recipient"
           placeholder="to address"
