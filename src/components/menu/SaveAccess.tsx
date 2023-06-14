@@ -13,8 +13,9 @@ export const SaveAccess: React.FC<SaveAccessProps> = ({ address, privateKey, onH
     <div>
       <Space direction="vertical">
         <i>
-          Pressing &quot;Save Access&quot; will prompt your browser to save access to your account. You can then access
-          your account using the saved credentials on this device or others.
+          Pressing &quot;Save Access&quot; will prompt your browser to save access to your account through its password
+          manager. You can then access your account using the saved credentials on this device just like a conventional
+          login.
         </i>
 
         <form id="pk" action="#">
@@ -32,8 +33,8 @@ export const SaveAccess: React.FC<SaveAccessProps> = ({ address, privateKey, onH
 
       <Space direction="vertical">
         <i>
-          Alternatively, you can export your access manually. However, we highly recommend utilizing a password manager
-          to securely store your data.
+          If you&apos;re having issues with the above feature, you can manually save your key by clicking the button
+          below. We strongly recommend using password managers to store these credentials.
         </i>
         <Button onClick={onHandleExport} icon={<ExportOutlined />}>
           Export
