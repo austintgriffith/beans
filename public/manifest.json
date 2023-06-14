@@ -1,8 +1,8 @@
 {
-  "name": "Eco Demo App",
-  "description": "Gasless Eco transfers",
+  "name": "Beam",
+  "description": "Beam app",
   "iconPath": "favicon.png",
-  "short_name": "Eco Demo App",
+  "short_name": "Beam",
   "start_url": ".",
   "icons": [
     {
