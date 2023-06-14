@@ -3,10 +3,10 @@ import { ethers } from "ethers";
 import { Button, Input } from "antd";
 
 interface WalletImportProps {
-  setShowImport: (show: boolean) => void;
+  onClose(): void;
 }
 
-export const WalletImport: React.FC<WalletImportProps> = ({ setShowImport }) => {
+export const WalletImport: React.FC<WalletImportProps> = ({ onClose }) => {
   const [username, setUsername] = useState("");
   const [importPrivatekey, setImportPrivatekey] = useState("");
 
@@ -66,7 +66,7 @@ export const WalletImport: React.FC<WalletImportProps> = ({ setShowImport }) => 
         </Button>
       </div>
 
-      <Button style={{ marginTop: 16 }} onClick={() => setShowImport(false)}>
+      <Button style={{ marginTop: 16 }} onClick={onClose}>
         Cancel
       </Button>
     </div>
