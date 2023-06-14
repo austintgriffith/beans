@@ -23,8 +23,8 @@ const StackupContext = React.createContext<IStackupProvider>({
 });
 
 export const useStackup = () => React.useContext<IStackupProvider>(StackupContext);
+export const useProvider = () => useStackup().provider;
 
-export const FLAT_FEE_AMOUNT = ethers.utils.parseEther(process.env.REACT_APP_FLAT_FEE_AMOUNT!);
 export const FLAT_FEE_RECIPIENT = ethers.utils.getAddress(process.env.REACT_APP_FLAT_FEE_RECIPIENT!);
 
 const config = {

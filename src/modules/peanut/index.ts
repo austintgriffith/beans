@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 import isEqual from "lodash.isequal";
 
-import { ECO_TOKEN_ADDRESS } from "@constants/tokens";
 import { PeanutV3__factory } from "@assets/contracts/factories";
 
+import { Token } from "@constants";
 import { ClaimRequest } from "@modules/peanut/types";
 import { ClaimSearchParams } from "@modules/peanut/utils";
 import { PEANUT_CLAIM_URL, PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
@@ -31,19 +31,20 @@ export function getRandomString(length = 32) {
   return result_str;
 }
 
-export async function makeDeposit(amount: ethers.BigNumber, password = getRandomString()) {
+export async function makeDeposit(token: string, amount: ethers.BigNumber, password = getRandomString()) {
   const wallet = generateKeysFromString(password);
 
   const peanutInterface = PeanutV3__factory.createInterface();
-  const txData = peanutInterface.encodeFunctionData("makeDeposit", [ECO_TOKEN_ADDRESS, 1, amount, 0, wallet.address]);
+  const txData = peanutInterface.encodeFunctionData("makeDeposit", [token, 1, amount, 0, wallet.address]);
 
   return { password, transaction: { to: PEANUT_V3_ADDRESS, data: txData } };
 }
 
-export function createLink(password: string, depositId: number): string {
+export function createLink(token: Token, password: string, depositId: number): string {
   const url = new URL("/claim", window.location.origin);
-  url.searchParams.set(ClaimSearchParams.DEPOSIT_ID, depositId.toString());
+  url.searchParams.set(ClaimSearchParams.TOKEN, token);
   url.searchParams.set(ClaimSearchParams.PASSWORD, password);
+  url.searchParams.set(ClaimSearchParams.DEPOSIT_ID, depositId.toString());
 
   return url.toString();
 }

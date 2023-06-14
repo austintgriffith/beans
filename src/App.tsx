@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Navigate, Route } from "react-router-dom";
 
-import { NETWORK } from "@constants";
+import { NETWORK, Token } from "@constants";
 import { About, Claim, Home } from "@views";
 import { Account, Footer, Header } from "@components";
 import { useBurnerWallet, useStaticJsonRPC } from "@hooks";
@@ -15,15 +15,25 @@ function App() {
   const provider = useStaticJsonRPC(NETWORK.rpcUrl, NETWORK.chainId);
   const signer = useBurnerWallet(provider);
 
+  const tokenRoutes = useMemo(
+    () =>
+      [Token.ECO, Token.USDC].map(token => (
+        <Route key={`${token}-home`} path={`/t/${token}`} element={<Home token={token} />} />
+      )),
+    [],
+  );
+
   if (!provider || !signer) return null;
 
   const routes = (
     <FadeTransitionRoutes>
-      <Route path="/" element={<Home provider={provider} />} />
-      <Route path="/about" element={<About />} />
+      {tokenRoutes}
+
+      {/*--- Redirect Existing Links to new claim route ---*/}
       <Route path="/claim" element={<Claim provider={provider} />} />
-      {/*<Route path="/swap" element={<Swap provider={provider} />} />*/}
-      <Route path="*" element={<Navigate to="/" />} />
+
+      <Route path="/about" element={<About />} />
+      <Route path="*" element={<Navigate to="/t/eco" state={{ redirect: true }} />} />
     </FadeTransitionRoutes>
   );
 
@@ -33,7 +43,7 @@ function App() {
         <Header>
           <Account provider={provider} signer={signer} />
         </Header>
-        <div style={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>{routes}</div>
+        {routes}
         <Footer />
       </StackupProvider>
     </div>

@@ -25,10 +25,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
-          cache : yarn 
+          cache : yarn
 
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
 
       - name: Run react-app lint
-        run: yarn react-app:lint
+        run: yarn lint

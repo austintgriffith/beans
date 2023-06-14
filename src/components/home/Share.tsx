@@ -8,37 +8,44 @@ import { useAlert } from "@hooks/useAlert";
 import { usePeanutDeposit } from "@hooks/usePeanutDeposit";
 import { blockExplorerLink, convertAmount, formatTokenAmount, getTransaction } from "@helpers";
 
+import { TokenIcon } from "@components/token";
+import { useStackup } from "@contexts/StackupContext";
 import { TokenFee } from "@components/commons/TokenFee";
-import { FLAT_FEE_AMOUNT, useStackup } from "@contexts/StackupContext";
-import { ReactComponent as EcoLogo } from "@assets/images/eco-logo.svg";
+import { useCurrentToken } from "@components/home/context/TokenContext";
+import { FeeOperation, useOperationFee } from "@hooks/useOperationFee";
+import { getTokenInfo } from "@constants";
 
 function getValues({
   amount,
+  decimals,
+  fee,
   balance,
 }: {
   amount: string;
+  decimals: number;
+  fee?: ethers.BigNumber;
   // Wallet's current balance
   balance?: ethers.BigNumber;
 }) {
   let total: ethers.BigNumber;
   try {
-    total = convertAmount(amount).abs();
+    total = convertAmount(amount, decimals).abs();
   } catch (e) {
     total = ethers.constants.Zero;
   }
 
-  const exceedsBalance = total.add(FLAT_FEE_AMOUNT).gt(balance || ethers.constants.Zero);
+  const exceedsBalance = total.add(fee || ethers.constants.Zero).gt(balance || ethers.constants.Zero);
 
   return { total, exceedsBalance };
 }
 
-interface TransferProps {
-  balance?: ethers.BigNumber;
-}
-
-export const Share: React.FC<TransferProps> = ({ balance }) => {
+export const Share: React.FC = () => {
+  const { token: tokenId, balance } = useCurrentToken();
   const { address, provider } = useStackup();
   const { deposit: makeDeposit } = usePeanutDeposit();
+  const token = getTokenInfo(tokenId);
+
+  const { data: fee } = useOperationFee(tokenId, FeeOperation.Share);
 
   const [alertApi, alertElemt] = useAlert({ className: "share-alert" });
 
@@ -46,13 +53,14 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
   const [loading, setLoading] = useState(false);
 
   const doSend = async () => {
+    if (!fee) return;
     setLoading(true);
     alertApi.clear();
     try {
-      const value = convertAmount(amount);
+      const value = convertAmount(amount, token.decimals);
 
       const password = Peanut.getRandomString();
-      const userOpResponse = await makeDeposit(value, password);
+      const userOpResponse = await makeDeposit(tokenId, password, value, fee);
 
       if (!userOpResponse) {
         alertApi.error({ message: "Unexpected error", description: "Please contact us for help" });
@@ -63,14 +71,18 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
       const receipt = await tx.wait();
 
       const deposit = Peanut.getDepositEvent(address, receipt);
-      const link = Peanut.createLink(password, deposit.id);
+      const link = Peanut.createLink(tokenId, password, deposit.id);
 
       alertApi.success({
         message: "Share link created!",
         description: (
           <>
             <Typography.Paragraph style={{ maxWidth: 400 }}>
-              Share this link to claim <b>{formatTokenAmount(ethers.utils.formatEther(value), 3)} ECO</b> tokens.
+              Share this link to claim{" "}
+              <b>
+                {formatTokenAmount(ethers.utils.formatUnits(value, token.decimals), 3)} {token.name}
+              </b>{" "}
+              tokens.
               <Typography.Link href={blockExplorerLink(userOpResponse.transactionHash)} target="_blank">
                 See transaction.
               </Typography.Link>
@@ -96,7 +108,7 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
     if (event.key === "Enter") return doSend();
   };
 
-  const { exceedsBalance } = getValues({ amount, balance });
+  const { exceedsBalance } = getValues({ amount, decimals: token.decimals, fee, balance });
   const disabled = exceedsBalance || loading || !amount;
 
   return (
@@ -112,10 +124,10 @@ export const Share: React.FC<TransferProps> = ({ balance }) => {
         onKeyPress={handleKey}
         style={{ width: 320 }}
         onChange={e => setAmount(e.target.value)}
-        prefix={<EcoLogo style={{ width: 20, height: 20 }} />}
+        prefix={<TokenIcon token={tokenId} style={{ width: 20, height: 20 }} />}
       />
 
-      <TokenFee fee={parseFloat(ethers.utils.formatEther(FLAT_FEE_AMOUNT))} />
+      <TokenFee token={tokenId} fee={fee} />
 
       {exceedsBalance && amount && !loading ? (
         <Alert

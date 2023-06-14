@@ -4,15 +4,13 @@ import { QRCode, message } from "antd";
 const QR_SIZE = 320;
 
 interface QRPunkBlockieProps {
-  scale?: string;
   address?: string;
-  showAddress?: boolean;
 }
 
-export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = ({ address, showAddress, scale }) => {
+export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = ({ address }) => {
   const qrValue = useMemo(() => {
     if (!address) return "";
-    const url = new URL("", window.location.origin);
+    const url = new URL("", window.location.href);
     url.searchParams.set("addr", address);
     return url.toString();
   }, [address]);
@@ -23,7 +21,6 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = ({ address, showAddre
         margin: "auto",
         position: "relative",
         transformOrigin: "50% 50%",
-        transform: "scale(" + (scale ? scale : "1") + ")",
         width: QR_SIZE,
         height: QR_SIZE,
       }}
@@ -52,19 +49,6 @@ export const QRPunkBlockie: React.FC<QRPunkBlockieProps> = ({ address, showAddre
           imageSettings={{ width: 105, height: 105, excavate: true, src: "" }}
         />
       </div>
-
-      {showAddress ? (
-        <div
-          style={{
-            fontWeight: "bolder",
-            letterSpacing: -0.8,
-            color: "#666666",
-            fontSize: 14.8,
-          }}
-        >
-          {address}
-        </div>
-      ) : null}
     </div>
   );
 };

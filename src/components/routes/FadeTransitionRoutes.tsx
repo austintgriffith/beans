@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Routes, useLocation } from "react-router-dom";
 
 import "./FadeTransitionRoutes.css";
@@ -9,18 +9,24 @@ export const FadeTransitionRoutes: React.FC<React.PropsWithChildren> = ({ childr
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState<"fadeIn" | "fadeOut">("fadeIn");
 
+  const next = useCallback(() => {
+    setTransitionStage("fadeIn");
+    setDisplayLocation(location);
+  }, [location]);
+
   useEffect(() => {
-    if (location.pathname !== displayLocation.pathname) setTransitionStage("fadeOut");
-  }, [location, displayLocation]);
+    if (location.pathname !== displayLocation.pathname) {
+      // If redirected from wildcard, skip animation
+      if (location.state?.redirect) next();
+      else setTransitionStage("fadeOut");
+    }
+  }, [location.pathname, displayLocation.pathname]);
 
   return (
     <div
       className={transitionStage}
       onAnimationEnd={() => {
-        if (transitionStage === "fadeOut") {
-          setTransitionStage("fadeIn");
-          setDisplayLocation(location);
-        }
+        if (transitionStage === "fadeOut") next();
       }}
     >
       <Routes location={displayLocation}>{children}</Routes>

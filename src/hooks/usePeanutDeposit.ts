@@ -3,8 +3,8 @@ import { ethers } from "ethers";
 
 import * as Peanut from "@modules/peanut";
 import { ERC20__factory } from "@assets/contracts";
-import { FLAT_FEE_AMOUNT, FLAT_FEE_RECIPIENT, useStackup } from "@contexts/StackupContext";
-import { ECO_TOKEN_ADDRESS, ENTRY_POINT_ADDRESS, ExecutionResult, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
+import { FLAT_FEE_RECIPIENT, useStackup } from "@contexts/StackupContext";
+import { ENTRY_POINT_ADDRESS, ExecutionResult, getTokenInfo, Token, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
 import { PEANUT_V3_ADDRESS } from "@modules/peanut/constants";
 import { EntryPoint__factory } from "userop/dist/typechain";
 import { hasWalletBeenDeployed } from "@helpers/contracts";
@@ -13,22 +13,23 @@ export const usePeanutDeposit = () => {
   const { address, provider, simpleAccount, client } = useStackup();
 
   const buildOps = useCallback(
-    async (value: ethers.BigNumber, password?: string) => {
-      const { transaction } = await Peanut.makeDeposit(value, password);
+    async (tokenId: Token, value: ethers.BigNumber, fee: ethers.BigNumber, password?: string) => {
+      const token = getTokenInfo(tokenId);
+      const { transaction } = await Peanut.makeDeposit(token.address, value, password);
 
-      const eco = ERC20__factory.connect(ECO_TOKEN_ADDRESS, provider);
+      const erc20 = ERC20__factory.connect(token.address, provider);
 
-      const peanutAllowance = await eco.allowance(address, PEANUT_V3_ADDRESS);
-      const paymasterAllowance = await eco.allowance(address, VERIFYING_PAYMASTER_ADDRESS);
+      const peanutAllowance = await erc20.allowance(address, PEANUT_V3_ADDRESS);
+      const paymasterAllowance = await erc20.allowance(address, VERIFYING_PAYMASTER_ADDRESS);
 
-      const feeData = eco.interface.encodeFunctionData("transfer", [FLAT_FEE_RECIPIENT, FLAT_FEE_AMOUNT]);
-      const feeTx = { to: ECO_TOKEN_ADDRESS, data: feeData };
+      const feeData = erc20.interface.encodeFunctionData("transfer", [FLAT_FEE_RECIPIENT, fee]);
+      const feeTx = { to: token.address, data: feeData };
 
       const txs = [feeTx, transaction];
 
       if (peanutAllowance.lt(value)) {
         const data = ERC20__factory.createInterface().encodeFunctionData("approve", [PEANUT_V3_ADDRESS, value]);
-        txs.push({ to: ECO_TOKEN_ADDRESS, data });
+        txs.push({ to: token.address, data });
       }
 
       if (paymasterAllowance.lt(ethers.constants.WeiPerEther.mul(10_000))) {
@@ -38,7 +39,7 @@ export const usePeanutDeposit = () => {
           VERIFYING_PAYMASTER_ADDRESS,
           ethers.constants.MaxUint256,
         ]);
-        txs.push({ to: ECO_TOKEN_ADDRESS, data });
+        txs.push({ to: token.address, data });
       }
 
       // Reverse order of transactions to execute token approvals first
@@ -52,47 +53,54 @@ export const usePeanutDeposit = () => {
     [address, provider, simpleAccount],
   );
 
-  const deposit = async (amount: ethers.BigNumber, password: string) => {
-    await buildOps(amount, password);
+  const deposit = async (token: Token, password: string, amount: ethers.BigNumber, fee: ethers.BigNumber) => {
+    await buildOps(token, amount, fee, password);
 
     const res = await client.sendUserOperation(simpleAccount);
     return res.wait();
   };
 
-  const simulateDeposit = useCallback(async () => {
-    try {
-      const amount = ethers.BigNumber.from(1);
-      await buildOps(amount);
+  const simulateDeposit = useCallback(
+    async (tokenId: Token) => {
+      try {
+        const token = getTokenInfo(tokenId);
+        const amount = ethers.BigNumber.from(1);
+        await buildOps(tokenId, amount, amount);
 
-      const userOp = await client.buildUserOperation(simpleAccount);
+        const userOp = await client.buildUserOperation(simpleAccount);
 
-      const balanceOfData = ERC20__factory.createInterface().encodeFunctionData("balanceOf", [userOp.sender]);
-      const beforeBalance = await provider.call({ to: ECO_TOKEN_ADDRESS, data: balanceOfData });
+        const balanceOfData = ERC20__factory.createInterface().encodeFunctionData("balanceOf", [userOp.sender]);
+        const beforeBalance = await provider.call({ to: token.address, data: balanceOfData });
 
-      const entryPointInterface = EntryPoint__factory.createInterface();
-      const callResult = await provider.call({
-        to: ENTRY_POINT_ADDRESS,
-        data: entryPointInterface.encodeFunctionData("simulateHandleOp", [userOp, ECO_TOKEN_ADDRESS, balanceOfData]),
-      });
+        const entryPointInterface = EntryPoint__factory.createInterface();
+        const callResult = await provider.call({
+          to: ENTRY_POINT_ADDRESS,
+          data: entryPointInterface.encodeFunctionData("simulateHandleOp", [userOp, token.address, balanceOfData]),
+        });
 
-      const result = entryPointInterface.decodeErrorResult("ExecutionResult", callResult) as unknown as ExecutionResult;
+        const result = entryPointInterface.decodeErrorResult(
+          "ExecutionResult",
+          callResult,
+        ) as unknown as ExecutionResult;
 
-      return ethers.BigNumber.from(beforeBalance).sub(result.targetResult).sub(amount);
-    } catch (e) {
-      const gasPrice = await provider.getGasPrice();
+        return ethers.BigNumber.from(beforeBalance).sub(result.targetResult).sub(amount);
+      } catch (e) {
+        const gasPrice = await provider.getGasPrice();
 
-      const PEANUT_DEPOSIT_GAS = 80_000;
-      const VALIDATION_GAS = 100_000;
-      const INIT_CODE_GAS = 385_266;
+        const PEANUT_DEPOSIT_GAS = 80_000;
+        const VALIDATION_GAS = 100_000;
+        const INIT_CODE_GAS = 385_266;
 
-      const hasBeenDeployed = await hasWalletBeenDeployed(provider, simpleAccount.getSender());
+        const hasBeenDeployed = await hasWalletBeenDeployed(provider, simpleAccount.getSender());
 
-      let gas = PEANUT_DEPOSIT_GAS + VALIDATION_GAS;
-      if (!hasBeenDeployed) gas += INIT_CODE_GAS;
+        let gas = PEANUT_DEPOSIT_GAS + VALIDATION_GAS;
+        if (!hasBeenDeployed) gas += INIT_CODE_GAS;
 
-      return gasPrice.mul(gas);
-    }
-  }, [buildOps, client, provider, simpleAccount]);
+        return gasPrice.mul(gas);
+      }
+    },
+    [buildOps, client, provider, simpleAccount],
+  );
 
   return { deposit, simulateDeposit };
 };
