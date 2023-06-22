@@ -11,7 +11,7 @@ import { TokenContext } from "@components/home/context/TokenContext";
 import { getTokenInfo, Token } from "@constants";
 import { formatTokenAmount } from "@helpers";
 import { useBalance } from "@hooks/useBalance";
-import { useStackup } from "@contexts/StackupContext";
+import { useFunWallet } from "@contexts/FunWalletContext";
 
 interface HomeProps {
   token: Token;
@@ -38,7 +38,7 @@ const TokenBalance: React.FC<{ decimals: number; balance?: ethers.BigNumber; ico
 
 export const Home: React.FC<HomeProps> = ({ token }) => {
   const navigate = useNavigate();
-  const { address } = useStackup();
+  const { address } = useFunWallet();
   const { balance } = useBalance(token, address);
   const { decimals } = getTokenInfo(token);
 

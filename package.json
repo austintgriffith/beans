@@ -20,13 +20,15 @@
     "antd": "~5.5.0",
     "eth-hooks": "^4.6.2",
     "ethers": "^5.7.2",
+    "fun-wallet": "^0.3.4",
     "lodash.isequal": "^4.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-reader": "^2.2.1",
     "react-query": "^3.39.2",
     "react-router-dom": "^6.10.0",
-    "userop": "^0.2.0"
+    "userop": "^0.2.0",
+    "viem": "^0.3.50"
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^11.0.0",

@@ -20,7 +20,7 @@ export const SaveAccess: React.FC<SaveAccessProps> = ({ address, privateKey, onH
 
         <form id="pk" action="#">
           <span style={{ display: "none" }}>
-            <input type="text" name="username" value={"Eco Wallet - " + address} />
+            <input type="text" name="username" value={"Beam - " + address} />
             <input type="password" name="password" value={privateKey} />
           </span>
           <Button id="submitPk" value="Save Access" htmlType="submit" icon={<SaveOutlined />}>

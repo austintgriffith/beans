@@ -1,6 +1,14 @@
 export const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 
-type Network = "localhost" | "mainnet" | "goerli" | "polygon" | "mumbai" | "optimism" | "goerli-optimism";
+type Network =
+  | "localhost"
+  | "mainnet"
+  | "goerli"
+  | "polygon"
+  | "mumbai"
+  | "optimism"
+  | "goerli-optimism"
+  | "goerli-base";
 
 export interface INetwork {
   name: string;
@@ -55,10 +63,18 @@ export const NETWORKS: Record<Network, INetwork> = {
   },
   "goerli-optimism": {
     name: "goerli-optimism",
-    color: "#f01a37",
+    color: "#0975F6",
     chainId: 420,
     blockExplorer: "https://goerli-optimism.etherscan.io/",
-    rpcUrl: `https://goerli.optimism.io`,
+    rpcUrl: `https://endpoints.omniatech.io/v1/op/goerli/public`,
+    // rpcUrl: `https://goerli.optimism.io`,
+  },
+  "goerli-base": {
+    name: "goerli-base",
+    color: "#f01a37",
+    chainId: 84531,
+    blockExplorer: "https://goerli.basescan.org//",
+    rpcUrl: `https://goerli.base.org`,
   },
 };
 

@@ -8,6 +8,9 @@ function getPeanutAddress() {
       return "0x1aBe03DC4706aE47c4F2ae04EEBe5c8607c74e17";
     case 420:
       return "0xDC608f2Bc4f0AFf02D12d51Ca8b543B343525c8a";
+    case 84531:
+      // TODO: Use correct address
+      return "0xDC608f2Bc4f0AFf02D12d51Ca8b543B343525c8a";
   }
   throw new Error("Peanut Protocol Not Available on this network");
 }

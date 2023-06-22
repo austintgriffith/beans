@@ -6,6 +6,7 @@ import { About, Claim, Home } from "@views";
 import { Account, Footer, Header } from "@components";
 import { useBurnerWallet, useStaticJsonRPC } from "@hooks";
 import { StackupProvider } from "@contexts/StackupContext";
+import { FunWalletProvider } from "@contexts/FunWalletContext";
 import { FadeTransitionRoutes } from "@components/routes/FadeTransitionRoutes";
 
 import "./App.css";
@@ -40,11 +41,13 @@ function App() {
   return (
     <div className="App">
       <StackupProvider provider={provider} signer={signer}>
-        <Header>
-          <Account provider={provider} signer={signer} />
-        </Header>
-        {routes}
-        <Footer />
+        <FunWalletProvider provider={provider} signer={signer}>
+          <Header>
+            <Account provider={provider} signer={signer} />
+          </Header>
+          {routes}
+          <Footer />
+        </FunWalletProvider>
       </StackupProvider>
     </div>
   );

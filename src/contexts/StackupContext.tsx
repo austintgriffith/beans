@@ -3,8 +3,8 @@ import { ethers } from "ethers";
 import { Client, Presets, UserOperationMiddlewareFn } from "userop";
 import { SimpleAccount } from "userop/dist/preset/builder";
 
-import { STACKUP_API_KEY, USDC_TOKEN_ADDRESS } from "@constants";
 import { PAYMASTER_URL } from "@modules/peanut/constants";
+import { ENTRY_POINT_ADDRESS, SIMPLE_ACCOUNT_FACTORY_ADDRESS, STACKUP_API_KEY, USDC_TOKEN_ADDRESS } from "@constants";
 
 interface IStackupProvider {
   address: string;
@@ -29,8 +29,8 @@ export const FLAT_FEE_RECIPIENT = ethers.utils.getAddress(process.env.REACT_APP_
 
 const config = {
   rpcUrl: `https://api.stackup.sh/v1/node/${STACKUP_API_KEY}`,
-  entryPoint: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
-  simpleAccountFactory: "0x9406Cc6185a346906296840746125a0E44976454",
+  entryPoint: ENTRY_POINT_ADDRESS,
+  simpleAccountFactory: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
   paymaster: {
     eco: {
       rpcUrl: PAYMASTER_URL,

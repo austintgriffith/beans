@@ -6,7 +6,7 @@ import { ScanOutlined, SendOutlined } from "@ant-design/icons";
 import { Alert, Button, FloatButton, Input, InputProps, Space, Typography } from "antd";
 
 import { useAlert } from "@hooks/useAlert";
-import { useTokenTransfer } from "@hooks/useTokenTransfer";
+import { useFunTokenTransfer } from "@hooks/useFunTokenTransfer";
 import { FeeOperation, useOperationFee } from "@hooks/useOperationFee";
 import { useStackup } from "@contexts/StackupContext";
 import { blockExplorerLink, convertAmount, formatTokenAmount } from "@helpers";
@@ -33,7 +33,7 @@ export const Transfer: React.FC = () => {
   const navigate = useNavigate();
   const { provider } = useStackup();
   const { token: tokenId, balance } = useCurrentToken();
-  const { transfer } = useTokenTransfer(tokenId);
+  const { transfer } = useFunTokenTransfer(tokenId);
   const token = getTokenInfo(tokenId);
 
   const { data: fee } = useOperationFee(tokenId, FeeOperation.Transfer);
