@@ -8,7 +8,8 @@ type Network =
   | "mumbai"
   | "optimism"
   | "goerli-optimism"
-  | "goerli-base";
+  | "base"
+  | "base-goerli";
 
 export interface INetwork {
   name: string;
@@ -69,14 +70,25 @@ export const NETWORKS: Record<Network, INetwork> = {
     rpcUrl: `https://endpoints.omniatech.io/v1/op/goerli/public`,
     // rpcUrl: `https://goerli.optimism.io`,
   },
-  "goerli-base": {
-    name: "goerli-base",
+  "base-goerli": {
+    name: "base-goerli",
     color: "#f01a37",
     chainId: 84531,
     blockExplorer: "https://goerli.basescan.org//",
     rpcUrl: `https://goerli.base.org`,
   },
+  base: {
+    name: "base",
+    color: "#f01a37",
+    chainId: 8453,
+    blockExplorer: "https://goerli.basescan.org//",
+    rpcUrl: `https://goerli.base.org`,
+  },
 };
+
+export function getNetworkById(chainId: number) {
+  return Object.values(NETWORKS).find(network => network.chainId === chainId);
+}
 
 export const NETWORK = NETWORKS[process.env.REACT_APP_NETWORK as keyof typeof NETWORKS];
 

@@ -1,41 +1,50 @@
 import { ethers } from "ethers";
 import { hasWalletBeenDeployed } from "@helpers";
 import { ERC20__factory } from "@assets/contracts";
-import { FLAT_FEE_RECIPIENT } from "@contexts/StackupContext";
 import { getSimpleAccount, useFunWallet } from "@contexts/FunWalletContext";
-import { getTokenInfo, Token, VERIFYING_PAYMASTER_ADDRESS } from "@constants";
+import { getNetworkById, getTokenInfo, NETWORK, Token } from "@constants";
+import { useMemo } from "react";
+import {
+  FLAT_VERIFYING_PAYMASTER_ADDRESS_BASE,
+  FLAT_VERIFYING_PAYMASTER_ADDRESS_OPTIMISM,
+} from "@modules/fun/FunSimpleAccount";
 
-export const useFunTokenTransfer = (tokenId: Token) => {
-  const { address, wallet, signer, provider } = useFunWallet();
+export const useFunTokenTransfer = (tokenId: Token, network = NETWORK.chainId) => {
+  const { address, wallet, signer } = useFunWallet();
 
-  const transfer = async (t: string, amount: ethers.BigNumber, fee: ethers.BigNumber): Promise<string> => {
-    const token = getTokenInfo(tokenId);
+  const provider = useMemo(() => new ethers.providers.StaticJsonRpcProvider(getNetworkById(network)!.rpcUrl), []);
+
+  const transfer = async (t: string, amount: ethers.BigNumber): Promise<string> => {
+    const token = getTokenInfo(tokenId, network);
     const to = ethers.utils.getAddress(t);
 
     const erc20 = ERC20__factory.connect(token.address, provider);
 
     const data = erc20.interface.encodeFunctionData("transfer", [to, amount]);
-    const feeData = erc20.interface.encodeFunctionData("transfer", [FLAT_FEE_RECIPIENT, fee]);
 
     const simpleAccount = await getSimpleAccount(signer, provider);
 
+    const paymasterAddress = getNetworkById(network)?.name?.includes("base")
+      ? FLAT_VERIFYING_PAYMASTER_ADDRESS_BASE
+      : FLAT_VERIFYING_PAYMASTER_ADDRESS_OPTIMISM;
+
     const hasBeenDeployed = await hasWalletBeenDeployed(provider, address);
-    if (hasBeenDeployed) {
-      simpleAccount.executeBatch([erc20.address, token.address], [data, feeData]);
+
+    const allowance = await erc20.allowance(address, paymasterAddress);
+    const hasEnoughAllowance = allowance.gte(ethers.utils.parseUnits("1000", token.decimals));
+
+    if (hasBeenDeployed && hasEnoughAllowance) {
+      simpleAccount.execute(erc20.address, 0, data);
     } else {
       // Execute transaction and approve Paymaster to spend tokens to pay gas fees in ECO tokens
       simpleAccount.executeBatch(
-        [erc20.address, erc20.address, token.address],
-        [
-          data,
-          erc20.interface.encodeFunctionData("approve", [VERIFYING_PAYMASTER_ADDRESS, ethers.constants.MaxUint256]),
-          feeData,
-        ],
+        [erc20.address, erc20.address],
+        [data, erc20.interface.encodeFunctionData("approve", [paymasterAddress, ethers.constants.MaxUint256])],
       );
     }
 
-    const res = await wallet.executeBatch(simpleAccount);
-    return res.opHash;
+    const res = await wallet.executeBatch(simpleAccount, network);
+    return res.txid!;
   };
 
   return { transfer };

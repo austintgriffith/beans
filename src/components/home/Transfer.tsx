@@ -17,7 +17,7 @@ import { TokenIcon } from "@components/token";
 import { TokenFee } from "@components/commons/TokenFee";
 import { AddressInput } from "@components/AddressInput";
 import { useCurrentToken } from "@components/home/context/TokenContext";
-import { getTokenInfo } from "@constants";
+import { getTokenInfo, NETWORK, NETWORKS } from "@constants";
 
 function getTotal(amount: string, decimals: number) {
   try {
@@ -28,12 +28,14 @@ function getTotal(amount: string, decimals: number) {
 }
 
 let scanner: (show: boolean) => void;
+const baseChainId = NETWORK.name.includes("goerli") ? NETWORKS["base-goerli"].chainId : NETWORKS["base"].chainId;
 
 export const Transfer: React.FC = () => {
   const navigate = useNavigate();
   const { provider } = useStackup();
   const { token: tokenId, balance } = useCurrentToken();
-  const { transfer } = useFunTokenTransfer(tokenId);
+  const { transfer: transferOptimism } = useFunTokenTransfer(tokenId);
+  const { transfer: transferBase } = useFunTokenTransfer(tokenId, baseChainId);
   const token = getTokenInfo(tokenId);
 
   const { data: fee } = useOperationFee(tokenId, FeeOperation.Transfer);
@@ -59,7 +61,10 @@ export const Transfer: React.FC = () => {
     alertApi.clear();
     const value = convertAmount(amount, token.decimals);
     try {
-      const txHash = await transfer(toAddress, value, fee);
+      const txHash = await transferOptimism(toAddress, value);
+      const txHash2 = await transferBase(toAddress, value);
+
+      console.log({ txHash, txHash2 });
 
       alertApi.success({
         message: "Transfer Executed!",
@@ -71,7 +76,17 @@ export const Transfer: React.FC = () => {
             </b>{" "}
             tokens to <Address provider={provider} address={toAddress} style={{ fontWeight: "bold" }} />.<br />
             <Typography.Link href={blockExplorerLink(txHash)} target="_blank">
-              See transaction.
+              See Optimism transaction.
+            </Typography.Link>
+            <br />
+            <Typography.Link
+              href={blockExplorerLink(
+                txHash2,
+                NETWORK.name.includes("goerli") ? NETWORKS["base-goerli"] : NETWORKS.base,
+              )}
+              target="_blank"
+            >
+              See Base transaction.
             </Typography.Link>
           </>
         ),

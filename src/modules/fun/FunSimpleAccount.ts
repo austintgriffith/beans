@@ -1,9 +1,8 @@
-import { Address, Hex, toBytes } from "viem";
+import { Address, Hex } from "viem";
 import { ethers } from "ethers";
 import {
   Chain,
   configureEnvironment,
-  Eoa,
   ExecutionReceipt,
   FunWallet,
   getChainFromData,
@@ -18,9 +17,14 @@ import { EOASignature } from "userop/dist/preset/middleware";
 
 import { NETWORK } from "@constants";
 import { getSimpleAccount } from "@contexts/StackupContext";
+import { flatVerifyingPaymaster } from "@modules/fun/middleware/paymaster";
+
 import { FunClient } from "./FunClient";
 
 const defaultChain = NETWORK.chainId;
+
+export const FLAT_VERIFYING_PAYMASTER_ADDRESS_OPTIMISM = "0xe459a01E604497C879E77e5203b3fFFc335BdeA0"; // Goerli-Optimism
+export const FLAT_VERIFYING_PAYMASTER_ADDRESS_BASE = "0xAb1D243b07e99C91dE9E4B80DFc2B07a8332A2f7"; // Goerli-Base
 
 export class FunSimpleAccount extends FunWallet {
   async executeBatch(
@@ -28,27 +32,27 @@ export class FunSimpleAccount extends FunWallet {
     _chain: string | Chain | number = defaultChain,
   ): Promise<ExecutionReceipt> {
     const chain = await getChainFromData(_chain);
+    // eslint-disable-next-line
     const _simpleAccount = simpleAccount as any;
     const provider: ethers.providers.JsonRpcProvider = _simpleAccount.provider;
 
     await configureEnvironment({
       chain,
       apiKey: process.env.REACT_APP_FUN_WALLET_API_KEY!,
-      // gasSponsor: {
-      //   sponsorAddress: "0x175C5611402815Eba550Dad16abd2ac366a63329",
-      //   token: ECO_TOKEN_ADDRESS,
-      // },
-      // fee: {
-      //   amount: 20, // 20 ECO
-      //   recipient: FLAT_FEE_RECIPIENT as Hex,
-      //   token: ECO_TOKEN_ADDRESS,
-      // },
     });
+
+    await chain.init();
+
+    const paymasterAddress = chain.name?.includes("base")
+      ? FLAT_VERIFYING_PAYMASTER_ADDRESS_BASE
+      : FLAT_VERIFYING_PAYMASTER_ADDRESS_OPTIMISM;
 
     simpleAccount
       .resetMiddleware()
       .useMiddleware(_simpleAccount.resolveAccount)
+      .useMiddleware(flatVerifyingPaymaster(provider, paymasterAddress, true))
       .useMiddleware(estimateUserOperationGas(provider))
+      .useMiddleware(flatVerifyingPaymaster(provider, paymasterAddress))
       .useMiddleware(EOASignature(_simpleAccount.signer));
 
     const userOpRaw = await simpleAccount.buildOp(_simpleAccount.entryPoint.address, provider.network.chainId);
@@ -90,25 +94,16 @@ const estimateUserOperationGas =
       );
     }
 
+    ctx.op.maxFeePerGas = (await provider.getGasPrice()).toHexString();
+
     const est = await FunClient.estimateUserOp(provider, ctx.entryPoint, OpToJSON(ctx.op));
 
+    ctx.op.callGasLimit = est.callGasLimit;
     ctx.op.preVerificationGas = est.preVerificationGas;
     ctx.op.verificationGasLimit = est.verificationGas;
-    ctx.op.callGasLimit = est.callGasLimit;
-  };
 
-export class EoaSimpleAccount extends Eoa {
-  async signHash(hash: Hex) {
-    console.log("hash", hash);
-    await this.init();
-    if (this.signer?.type === "local") {
-      const signature = await this.signer.signMessage({ message: { raw: ethers.utils.arrayify(hash) } });
-      console.log("in", signature);
-      return signature;
-    } else if (this.client && this.account) {
-      return this.client.signMessage({ account: this.account, message: { raw: toBytes(hash) } });
-    } else {
-      throw new Error("No signer or client");
+    const MINIMUM_CALL_GAS_LIMIT = 200_000;
+    if (ethers.BigNumber.from(ctx.op.callGasLimit).lte(MINIMUM_CALL_GAS_LIMIT)) {
+      ctx.op.callGasLimit = ethers.BigNumber.from(MINIMUM_CALL_GAS_LIMIT).toHexString();
     }
-  }
-}
+  };

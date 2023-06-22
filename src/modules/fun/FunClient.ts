@@ -11,7 +11,7 @@ export class FunClient {
   }
 
   private static request(
-    data: any,
+    data: any, // eslint-disable-line
   ): Promise<{ preVerificationGas: string; verificationGas: string; callGasLimit: string }> {
     return fetch(new URL("bundler/estimate-user-op-gas", "https://api.fun.xyz"), {
       mode: "cors",
